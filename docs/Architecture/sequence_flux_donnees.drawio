@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="title" value="Diagramme de séquence — Flux de données entre les 5 blocs" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=15;fontStyle=1;fontColor=#1B3A6B;" vertex="1" parent="1">
+      <mxGeometry x="100" y="20" width="1400" height="36" as="geometry" />
+    </mxCell>
+
+    <!-- ══ ACTEURS / LIFELINES ══ -->
+    <mxCell id="act_user" value="Analyste SOC" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#1B3A6B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="100" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="lf_user" value="" style="endArrow=none;dashed=1;strokeColor=#1B3A6B;" edge="1" parent="1" source="act_user">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="110" y="900"/></Array></mxGeometry>
+    </mxCell>
+
+    <mxCell id="act_b1" value="Bloc 1&#xa;Scan ZAP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#C0522A;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="260" y="80" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="lf_b1" value="" style="endArrow=none;dashed=1;strokeColor=#C0522A;" edge="1" parent="1" source="act_b1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="320" y="900"/></Array></mxGeometry>
+    </mxCell>
+
+    <mxCell id="act_b2" value="Bloc 2&#xa;Données phishing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8e6fc;strokeColor=#534AB7;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="500" y="80" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="lf_b2" value="" style="endArrow=none;dashed=1;strokeColor=#534AB7;" edge="1" parent="1" source="act_b2">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="570" y="900"/></Array></mxGeometry>
+    </mxCell>
+
+    <mxCell id="act_b3" value="Bloc 3&#xa;Moteur IA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f4ee;strokeColor=#0F6E56;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="760" y="80" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="lf_b3" value="" style="endArrow=none;dashed=1;strokeColor=#0F6E56;" edge="1" parent="1" source="act_b3">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="820" y="900"/></Array></mxGeometry>
+    </mxCell>
+
+    <mxCell id="act_b4" value="Bloc 4&#xa;Corrélation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e6;strokeColor=#BA7517;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="80" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="lf_b4" value="" style="endArrow=none;dashed=1;strokeColor=#BA7517;" edge="1" parent="1" source="act_b4">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1060" y="900"/></Array></mxGeometry>
+    </mxCell>
+
+    <mxCell id="act_b5" value="Bloc 5&#xa;Dashboard SOC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#1B3A6B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1230" y="80" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="lf_b5" value="" style="endArrow=none;dashed=1;strokeColor=#1B3A6B;" edge="1" parent="1" source="act_b5">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1300" y="900"/></Array></mxGeometry>
+    </mxCell>
+
+    <!-- ══ ÉTAPE 1 : Analyste déclenche le scan ══ -->
+    <mxCell id="s1label" value="1. Lance un scan sur l'URL cible" style="text;html=1;fontSize=10;fontStyle=1;fontColor=#C0522A;align=left;" vertex="1" parent="1">
+      <mxGeometry x="112" y="155" width="210" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s1arr" value="" style="edgeStyle=blockThinEdgeStyle;html=1;strokeColor=#C0522A;fillColor=#C0522A;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="110" y="165"/><mxPoint x="320" y="165"/></Array></mxGeometry>
+    </mxCell>
+
+    <!-- ══ ÉTAPE 2 : ZAP scan + NVD enrichissement ══ -->
+    <mxCell id="s2box" value="Spider + Scan actif OWASP ZAP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#C0522A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="190" width="180" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="s2b" value="Enrichissement CVE/NVD API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#C0522A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="238" width="180" height="36" as="geometry" />
+    </mxCell>
+
+    <!-- ══ ÉTAPE 3 : JSON vers Bloc 3b ══ -->
+    <mxCell id="s3label" value="2. JSON vulnérabilités normalisées" style="text;html=1;fontSize=10;fontStyle=1;fontColor=#0F6E56;align=left;" vertex="1" parent="1">
+      <mxGeometry x="322" y="292" width="250" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s3arr" value="" style="edgeStyle=blockThinEdgeStyle;html=1;strokeColor=#0F6E56;fillColor=#0F6E56;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="320" y="302"/><mxPoint x="820" y="302"/></Array></mxGeometry>
+    </mxCell>
+
+    <!-- ══ ÉTAPE 4 : Corpus vers Bloc 3a ══ -->
+    <mxCell id="s4label" value="3. Corpus annoté (SMS + URLs)" style="text;html=1;fontSize=10;fontStyle=1;fontColor=#534AB7;align=left;" vertex="1" parent="1">
+      <mxGeometry x="572" y="332" width="240" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s4arr" value="" style="edgeStyle=blockThinEdgeStyle;html=1;strokeColor=#534AB7;fillColor=#534AB7;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="570" y="342"/><mxPoint x="820" y="342"/></Array></mxGeometry>
+    </mxCell>
+
+    <!-- ══ ÉTAPE 5 : Analyse IA ══ -->
+    <mxCell id="s5box" value="Classification phishing (BERT / TF-IDF)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f4ee;strokeColor=#0F6E56;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="760" y="368" width="220" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="s5b" value="Scoring contextuel vulnérabilités (XGBoost)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f4ee;strokeColor=#0F6E56;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="760" y="416" width="220" height="36" as="geometry" />
+    </mxCell>
+
+    <!-- ══ ÉTAPE 6 : Scores vers Bloc 4 ══ -->
+    <mxCell id="s6label" value="4. Scores phishing + scores vulnérabilités" style="text;html=1;fontSize=10;fontStyle=1;fontColor=#BA7517;align=left;" vertex="1" parent="1">
+      <mxGeometry x="822" y="470" width="280" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s6arr" value="" style="edgeStyle=blockThinEdgeStyle;html=1;strokeColor=#BA7517;fillColor=#BA7517;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="820" y="480"/><mxPoint x="1060" y="480"/></Array></mxGeometry>
+    </mxCell>
+
+    <!-- ══ ÉTAPE 7 : Corrélation ══ -->
+    <mxCell id="s7box" value="Croisement domaines + règles de corrélation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e6;strokeColor=#BA7517;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="506" width="220" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="s7b" value="Calcul score risque composite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e6;strokeColor=#BA7517;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="554" width="220" height="36" as="geometry" />
+    </mxCell>
+
+    <!-- ══ ÉTAPE 8 : Alertes vers Bloc 5 ══ -->
+    <mxCell id="s8label" value="5. Alertes composites → PostgreSQL" style="text;html=1;fontSize=10;fontStyle=1;fontColor=#1B3A6B;align=left;" vertex="1" parent="1">
+      <mxGeometry x="1062" y="608" width="260" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s8arr" value="" style="edgeStyle=blockThinEdgeStyle;html=1;strokeColor=#1B3A6B;fillColor=#1B3A6B;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1060" y="618"/><mxPoint x="1300" y="618"/></Array></mxGeometry>
+    </mxCell>
+
+    <!-- ══ ÉTAPE 9 : Dashboard affiche ══ -->
+    <mxCell id="s9box" value="Affichage dashboard SOC (React.js)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f0fe;strokeColor=#1B3A6B;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1230" y="644" width="200" height="36" as="geometry" />
+    </mxCell>
+
+    <!-- ══ ÉTAPE 10 : Retour analyste ══ -->
+    <mxCell id="s10label" value="6. Consultation + actions correctives" style="text;html=1;fontSize=10;fontStyle=1;fontColor=#1B3A6B;align=right;" vertex="1" parent="1">
+      <mxGeometry x="112" y="700" width="1180" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s10arr" value="" style="edgeStyle=blockThinEdgeStyle;html=1;strokeColor=#1B3A6B;fillColor=#1B3A6B;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1300" y="710"/><mxPoint x="110" y="710"/></Array></mxGeometry>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
