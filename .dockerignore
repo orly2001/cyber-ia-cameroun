@@ -1,0 +1,37 @@
+# Environnements virtuels
+venv/
+.venv/
+env/
+
+# Caches Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+pytest-cache-files-*/
+.mypy_cache/
+.ruff_cache/
+
+# Versionnage
+.git/
+.gitignore
+
+# Modèles entraînés (lourds — montés/volumes en prod)
+models/
+
+# Données brutes & bases locales
+data/raw/
+*.db
+data/soc_dev.db
+
+# Frontend / outils JS
+node_modules/
+
+# Documentation
+docs/
+
+# Divers
+*.log
+.env
+.DS_Store
+~$*

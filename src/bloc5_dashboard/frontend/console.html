@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Console d'analyse — IA & Cybersécurité Cameroun</title>
+<style>
+  :root{
+    --bg:#0d1422; --panel:#15203a; --panel2:#1b2747; --line:#27365e;
+    --txt:#e8eefc; --muted:#94a6cf; --accent:#3b82f6; --ok:#16a34a;
+    --bad:#dc2626; --warn:#d97706; --chip:#0f1830;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:700}
+  header .dot{color:var(--ok);margin-right:8px}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 24px;display:grid;gap:20px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card h2{margin:0 0 12px;font-size:15px}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  textarea,input,select{width:100%;background:var(--chip);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px 11px;font:inherit}
+  textarea{min-height:84px;resize:vertical}
+  button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 16px;font:inherit;font-weight:600;cursor:pointer;margin-top:12px}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .verdict{display:flex;align-items:center;gap:14px;margin-top:14px;padding:14px;border-radius:10px;background:var(--panel2)}
+  .badge{padding:4px 12px;border-radius:999px;font-weight:700;font-size:12px}
+  .b-bad{background:rgba(220,38,38,.18);color:#fca5a5;border:1px solid #7f1d1d}
+  .b-ok{background:rgba(22,163,74,.18);color:#86efac;border:1px solid #14532d}
+  .gauge{flex:1;height:10px;background:#0a1020;border-radius:999px;overflow:hidden}
+  .gauge>i{display:block;height:100%;border-radius:999px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{background:var(--chip);border:1px solid var(--line);color:var(--muted);padding:3px 9px;border-radius:999px;font-size:11px}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  .muted{color:var(--muted)}
+  .feed{max-height:360px;overflow:auto;margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .ev{padding:9px 11px;border-radius:8px;background:var(--panel2);border-left:3px solid var(--line)}
+  .ev.ph{border-left-color:var(--bad)}
+  .ev.lg{border-left-color:var(--ok)}
+  .ev .meta{font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+  .kpis{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}
+  .kpi{background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:110px}
+  .kpi b{display:block;font-size:20px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+  .row>div{flex:1;min-width:120px}
+  .small{font-size:12px}
+  .banner{background:#3b1d1d;border:1px solid #7f1d1d;color:#fca5a5;padding:9px 12px;border-radius:8px;display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="dot">&#9679;</span>Console d'analyse — Phishing</h1>
+  <span class="muted small">IA &amp; Cybersécurité Cameroun</span>
+  <span style="flex:1"></span>
+  <a href="index.html">&#8594; Dashboard SOC (alertes)</a>
+</header>
+
+<div class="wrap">
+  <div id="banner" class="banner"></div>
+
+  <div class="card">
+    <h2>Modèle déployé</h2>
+    <div id="modelInfo" class="muted small">Chargement…</div>
+  </div>
+
+  <div class="grid2">
+    <!-- Analyse unitaire -->
+    <div class="card">
+      <h2>Analyser un message</h2>
+      <label>Texte (SMS, e-mail ou URL)</label>
+      <textarea id="msg" placeholder="Ex : URGENT, votre compte MoMo sera suspendu. Confirmez votre code PIN ici http://bit.ly/x"></textarea>
+      <div class="row">
+        <div>
+          <label>Canal</label>
+          <select id="chan"><option>SMS</option><option>EMAIL</option><option>URL</option></select>
+        </div>
+        <div>
+          <label>Langue</label>
+          <select id="lang"><option value="fr">fr</option><option value="en">en</option></select>
+        </div>
+      </div>
+      <button id="btnAnalyze">Analyser</button>
+      <div id="result"></div>
+    </div>
+
+    <!-- Upload -->
+    <div class="card">
+      <h2>Analyser un fichier</h2>
+      <p class="muted small">Formats : <b>.csv</b> (colonne <code>raw_text</code>) ou <b>.txt</b> (un message par ligne). Max 2 Mo / 5000 lignes.</p>
+      <label>Fichier</label>
+      <input type="file" id="file" accept=".csv,.txt"/>
+      <label>Clé d'API (X-API-Key) — si configurée côté serveur</label>
+      <input type="password" id="apikey" placeholder="(laisser vide en mode dev)"/>
+      <button id="btnUpload">Téléverser &amp; analyser</button>
+      <div id="uploadSummary" class="muted small" style="margin-top:10px"></div>
+      <div id="uploadResults"></div>
+    </div>
+  </div>
+
+  <!-- Temps réel -->
+  <div class="card">
+    <h2>Analyse en temps réel (simulation de logs)</h2>
+    <div class="row">
+      <div>
+        <label>Nombre d'événements</label>
+        <input type="number" id="rtCount" value="30" min="1" max="200"/>
+      </div>
+      <div>
+        <label>Délai (s)</label>
+        <input type="number" id="rtDelay" value="0.6" step="0.1" min="0" max="5"/>
+      </div>
+      <div>
+        <label>Taux phishing</label>
+        <input type="number" id="rtRate" value="0.3" step="0.05" min="0" max="1"/>
+      </div>
+      <div style="flex:0">
+        <button id="btnStream">Démarrer</button>
+        <button id="btnStop" class="ghost" disabled>Arrêter</button>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><span class="muted small">Analysés</span><b id="kTotal">0</b></div>
+      <div class="kpi"><span class="muted small">Phishing</span><b id="kPh" style="color:#fca5a5">0</b></div>
+      <div class="kpi"><span class="muted small">Taux</span><b id="kRate">0%</b></div>
+    </div>
+    <div id="feed" class="feed"></div>
+  </div>
+</div>
+
+<script>
+  // ⚙️ Adapter à l'URL de votre API si nécessaire.
+  const API_BASE = "http://localhost:8000";
+
+  const $ = (id) => document.getElementById(id);
+  function banner(msg){ const b=$("banner"); if(!msg){b.style.display="none";return;} b.textContent=msg; b.style.display="block"; }
+  function pct(x){ return Math.round((x||0)*100); }
+  function gaugeColor(s){ return s>=0.66? "var(--bad)" : s>=0.33? "var(--warn)" : "var(--ok)"; }
+  function esc(t){ const d=document.createElement("div"); d.textContent=t==null?"":String(t); return d.innerHTML; }
+
+  // ---- Modèle ----
+  async function loadModel(){
+    try{
+      const r = await fetch(API_BASE + "/api/model");
+      const m = await r.json();
+      let met = m.metrics ? (" · F1 " + (m.metrics.f1!=null?Number(m.metrics.f1).toFixed(2):"–") +
+                 " · précision " + (m.metrics.precision!=null?Number(m.metrics.precision).toFixed(2):"–") +
+                 " · rappel " + (m.metrics.recall!=null?Number(m.metrics.recall).toFixed(2):"–")) : "";
+      $("modelInfo").innerHTML = "Type : <b>"+esc(m.model||m.type||"?")+"</b>" +
+        (m.trained!==undefined? " · entraîné : <b>"+(m.trained?"oui":"non (heuristique)")+"</b>":"") +
+        (m.threshold!=null? " · seuil : "+m.threshold:"") + met;
+    }catch(e){ $("modelInfo").textContent="Modèle indisponible (API injoignable)."; banner("API injoignable ("+API_BASE+"). Lancez le serveur et vérifiez API_BASE."); }
+  }
+
+  // ---- Analyse unitaire ----
+  function renderVerdict(el, res){
+    const ph = res.is_phishing;
+    const s = res.score||0;
+    let html = '<div class="verdict">'+
+      '<span class="badge '+(ph?"b-bad":"b-ok")+'">'+(ph?"PHISHING":"LÉGITIME")+'</span>'+
+      '<div class="gauge"><i style="width:'+pct(s)+'%;background:'+gaugeColor(s)+'"></i></div>'+
+      '<span class="small">'+pct(s)+'%</span></div>';
+    if(res.indicators && res.indicators.length){
+      html += '<div class="chips">'+res.indicators.map(i=>'<span class="chip">'+esc(i)+'</span>').join("")+'</div>';
+    }
+    if(res.model){ html += '<div class="muted small" style="margin-top:8px">Modèle : '+esc(res.model)+'</div>'; }
+    el.innerHTML = html;
+  }
+  async function analyze(){
+    const text = $("msg").value.trim();
+    if(!text){ $("result").innerHTML='<div class="muted small">Saisissez un message.</div>'; return; }
+    $("btnAnalyze").disabled=true;
+    try{
+      const r = await fetch(API_BASE+"/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({text,channel:$("chan").value,language:$("lang").value})});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      renderVerdict($("result"), await r.json());
+    }catch(e){ $("result").innerHTML='<div class="muted small">Erreur : '+esc(e.message)+'</div>'; }
+    $("btnAnalyze").disabled=false;
+  }
+
+  // ---- Upload ----
+  async function upload(){
+    const f = $("file").files[0];
+    if(!f){ $("uploadSummary").textContent="Choisissez un fichier."; return; }
+    $("btnUpload").disabled=true; $("uploadSummary").textContent="Analyse en cours…"; $("uploadResults").innerHTML="";
+    try{
+      const fd = new FormData(); fd.append("file", f);
+      const headers = {}; const k=$("apikey").value.trim(); if(k) headers["X-API-Key"]=k;
+      const r = await fetch(API_BASE+"/api/upload",{method:"POST",headers,body:fd});
+      if(!r.ok){ const t=await r.text(); throw new Error("HTTP "+r.status+" "+t.slice(0,120)); }
+      const d = await r.json();
+      const sm = d.summary||{};
+      $("uploadSummary").innerHTML = "Fichier <b>"+esc(d.filename)+"</b> — "+(d.count||0)+
+        " message(s), <b style='color:#fca5a5'>"+(sm.n_phishing||0)+"</b> phishing ("+pct(sm.rate)+"%).";
+      const rows=(d.results||[]).slice(0,200).map(x=>
+        '<tr><td>'+(x.is_phishing?'<span class="badge b-bad">PH</span>':'<span class="badge b-ok">OK</span>')+'</td>'+
+        '<td>'+pct(x.score)+'%</td><td>'+esc((x.text||x.raw_text||"").slice(0,90))+'</td></tr>').join("");
+      $("uploadResults").innerHTML='<table><thead><tr><th>Verdict</th><th>Score</th><th>Message</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    }catch(e){ $("uploadSummary").innerHTML='<span style="color:#fca5a5">Erreur : '+esc(e.message)+'</span>'; }
+    $("btnUpload").disabled=false;
+  }
+
+  // ---- Temps réel (SSE) ----
+  let es=null, seen=0, ph=0;
+  function rtReset(){ seen=0; ph=0; $("kTotal").textContent="0"; $("kPh").textContent="0"; $("kRate").textContent="0%"; $("feed").innerHTML=""; }
+  function startStream(){
+    rtReset();
+    const c=$("rtCount").value, d=$("rtDelay").value, rate=$("rtRate").value;
+    const url = API_BASE+"/api/stream?count="+c+"&delay="+d+"&phishing_rate="+rate;
+    try{ es = new EventSource(url); }
+    catch(e){ banner("SSE non supporté / API injoignable."); return; }
+    $("btnStream").disabled=true; $("btnStop").disabled=false;
+    es.onmessage=(m)=>{
+      let ev; try{ ev=JSON.parse(m.data);}catch(_){return;}
+      seen++; if(ev.is_phishing) ph++;
+      $("kTotal").textContent=seen; $("kPh").textContent=ph;
+      $("kRate").textContent=pct(seen?ph/seen:0)+"%";
+      const div=document.createElement("div");
+      div.className="ev "+(ev.is_phishing?"ph":"lg");
+      div.innerHTML='<div class="meta"><span>'+esc(ev.ts||"")+'</span><span>'+esc(ev.channel||"")+'</span>'+
+        '<span>'+esc(ev.source_ip||ev.sender||"")+'</span><span>score '+pct(ev.score)+'%</span></div>'+
+        '<div>'+(ev.is_phishing?'<span class="badge b-bad">PHISHING</span> ':'<span class="badge b-ok">OK</span> ')+
+        esc((ev.raw_text||"").slice(0,120))+'</div>';
+      $("feed").prepend(div);
+    };
+    es.onerror=()=>{ stopStream(); };
+  }
+  function stopStream(){ if(es){es.close(); es=null;} $("btnStream").disabled=false; $("btnStop").disabled=true; }
+
+  $("btnAnalyze").onclick=analyze;
+  $("btnUpload").onclick=upload;
+  $("btnStream").onclick=startStream;
+  $("btnStop").onclick=stopStream;
+  loadModel();
+</script>
+</body>
+</html>

@@ -3,7 +3,10 @@ __pycache__/
 *.pkl
 *.pt
 .env
-data/raw/models/
+data/raw/
+# Artefacts de modele (lourds) : on garde le code, pas les binaires.
+models/
+models/registry/
 *.joblib
 # Fichiers temporaires Office
 ~$*

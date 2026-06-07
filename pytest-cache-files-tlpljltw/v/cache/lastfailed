@@ -1,0 +1,6 @@
+{
+  "tests/test_api.py::test_run_demo_without_key_is_ok": true,
+  "tests/test_api.py::test_list_alerts_after_demo": true,
+  "tests/test_api.py::test_patch_status": true,
+  "tests/test_pipeline_demo.py::test_run_pipeline_demo_produces_alerts": true
+}

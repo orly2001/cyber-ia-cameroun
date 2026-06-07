@@ -1,0 +1,51 @@
+# ---------------------------------------------------------------------------
+# Orchestration locale : PostgreSQL + API SOC (bloc 5).
+# Noms d'utilisateur / base alignés avec src/common/config.py
+#   database_url = postgresql+psycopg2://soc:soc@.../soc_cm
+# ---------------------------------------------------------------------------
+services:
+  db:
+    image: postgres:16
+    container_name: soc-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: soc
+      POSTGRES_PASSWORD: soc
+      POSTGRES_DB: soc_cm
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soc -d soc_cm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - soc-net
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: soc-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Pointe vers le service `db` du réseau Compose (et non localhost).
+      DATABASE_URL: postgresql+psycopg2://soc:soc@db:5432/soc_cm
+      USE_SQLITE_FALLBACK: "false"
+      API_HOST: 0.0.0.0
+      API_PORT: "8000"
+    ports:
+      - "8000:8000"
+    networks:
+      - soc-net
+
+volumes:
+  pgdata:
+
+networks:
+  soc-net:
+    driver: bridge

@@ -1,0 +1,5 @@
+# Cibles de scan d'exemple (environnement de test UNIQUEMENT).
+# Ne jamais scanner une cible sans autorisation écrite.
+127.0.0.1
+scanme.nmap.org
+http://testphp.vulnweb.com

@@ -1,0 +1,11 @@
+id  , channel, raw_text                                                                                                          , language, label, source
+s001, SMS    , "Cher client MTN MoMo, votre compte sera suspendu. Confirmez votre code PIN ici: http://momo-verify.cm-secure.net", fr      , 1    , terrain
+s002, SMS    , "Orange Money: vous avez recu 50000 FCFA. Cliquez pour valider: bit.ly/om-recu-xyz"                               , fr      , 1    , terrain
+s003, SMS    , "Felicitations! Vous avez gagne 2000000 FCFA a la loterie MTN. Envoyez vos infos au 6XXXXXXXX"                    , fr      , 1    , terrain
+s004, SMS    , "Votre transfert Orange Money de 10000 FCFA vers 69XXXXXXX a reussi. Solde: 23500 FCFA."                          , fr      , 0    , terrain
+s005, SMS    , "MTN: votre forfait internet de 5Go est active pour 30 jours. Merci."                                             , fr      , 0    , terrain
+s006, EMAIL  , "Dear customer, your Afriland First Bank account is locked. Verify now: http://afriland-secure-login.com"         , en      , 1    , phishtank
+s007, EMAIL  , "Votre facture ENEO du mois est disponible dans votre espace client. Cordialement."                               , fr      , 0    , terrain
+s008, URL    , "http://uba-cameroun.account-verify.ml/login"                                                                     , en      , 1    , openphish
+s009, URL    , "https://www.ecobank.com/cm/personal-banking"                                                                     , en      , 0    , terrain
+s010, SMS    , "CAMTEL: rechargez 1000F et recevez 5Go. Composez *123#. Offre valable aujourd'hui."                              , fr      , 0    , terrain
