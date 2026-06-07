@@ -3,4 +3,10 @@ __pycache__/
 *.pkl
 *.pt
 .env
-data/raw/
+data/raw/models/
+*.joblib
+# Fichiers temporaires Office
+~$*
+# Bases de données locales
+*.db
+data/soc_dev.db
