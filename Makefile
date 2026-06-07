@@ -3,12 +3,13 @@
 PYTHON ?= python
 PIP    ?= pip
 
-.PHONY: help install test run-api demo train docker-up docker-down lint
+.PHONY: help install test smoke run-api demo train docker-up docker-down lint
 
 help:
 	@echo "Cibles disponibles :"
 	@echo "  install      Installe les dépendances (requirements.txt)"
 	@echo "  test         Lance la suite de tests (pytest)"
+	@echo "  smoke        Smoke-test end-to-end de l'API (tous endpoints)"
 	@echo "  run-api      Démarre l'API FastAPI (uvicorn, port 8000)"
 	@echo "  demo         Exécute le pipeline de démonstration"
 	@echo "  train        Entraîne les modèles IA"
@@ -22,6 +23,9 @@ install:
 test:
 	$(PYTHON) -m pytest -q
 
+smoke:
+	$(PYTHON) -m scripts.smoke_test
+
 run-api:
 	$(PYTHON) -m uvicorn src.bloc5_dashboard.api.main:app --host 0.0.0.0 --port 8000 --reload
 
@@ -29,13 +33,4 @@ demo:
 	$(PYTHON) -m src.pipeline --demo
 
 train:
-	$(PYTHON) -m src.bloc3_ia.train
-
-docker-up:
-	docker compose up --build -d
-
-docker-down:
-	docker compose down
-
-lint:
-	$(PYTHON) -m compileall -q src
+	$(PYTHON) -m src.bloc3_ia.train --model tfidf --seed 42

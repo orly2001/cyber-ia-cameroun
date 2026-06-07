@@ -6,10 +6,14 @@ __pycache__/
 data/raw/
 # Artefacts de modele (lourds) : on garde le code, pas les binaires.
 models/
-models/registry/
 *.joblib
 # Fichiers temporaires Office
 ~$*
-# Bases de données locales
+# Bases de donnees locales
 *.db
+*.db-journal
 data/soc_dev.db
+# Fichiers parasites a ne jamais committer
+tmp_*.py
+pytest-cache-files-*/
+.pytest_cache/
