@@ -5,8 +5,15 @@ Corrige les defauts de l'ancien flux :
 * **Donnees reelles en priorite** : l'ordre de chargement privilegie un dataset
   consolide, puis les datasets externes reels, et ne retombe sur le synthetique
   qu'en dernier recours.
-* **Pas de fuite de donnees** : split stratifie train/val/test ; l'evaluation se
-  fait sur le TEST tenu a l'ecart (jamais vu a l'entrainement).
+* **Pas de fuite de donnees** : split stratifie train/val/test ; le calibrage du
+  seuil se fait sur la VALIDATION et l'evaluation finale sur le TEST tenu a
+  l'ecart (jamais vu a l'entrainement ni au calibrage).
+* **Seuil calibre** : apres entrainement, on balaye les seuils sur la VAL et on
+  retient celui qui maximise le F1 (ou le rappel sous contrainte precision >=
+  0.95). Le seuil retenu (``chosen_threshold``) est persiste dans le meta.json.
+* **Transparence par source** : metriques precision/recall/F1 ventilees par
+  ``source`` (reel ``uci_sms_spam`` vs ``synthetic``...) pour objectiver la
+  generalisation reelle.
 * **Versionnage des artefacts** : sauvegarde versionnee (modele + metrics.json +
   meta.json) via :mod:`src.bloc3_ia.model_registry`.
 
@@ -39,11 +46,16 @@ from typing import Dict, List, Optional, Tuple
 
 from src.bloc2_phishing import generate_corpus, load_samples, preprocess
 from src.bloc3_ia.bert_detector import BertPhishingDetector
-from src.bloc3_ia.evaluation import evaluate_predictions, print_report
+from src.bloc3_ia.evaluation import (
+    evaluate_by_source,
+    evaluate_predictions,
+    print_by_source_report,
+    print_report,
+)
 from src.bloc3_ia.phishing_detector import PhishingDetector
-from src.common.config import DATA_DIR, SAMPLES_DIR
+from src.common.config import DATA_DIR, SAMPLES_DIR, settings
 from src.common.logging_conf import get_logger
-from src.common.schemas import PhishingSample
+from src.common.schemas import PhishingPrediction, PhishingSample
 
 logger = get_logger(__name__)
 
@@ -54,6 +66,11 @@ SAMPLES_CSV = SAMPLES_DIR / "phishing_samples_cm.csv"
 
 # Seuil en deca duquel on considere le jeu de donnees comme tres petit.
 _SMALL_DATASET_THRESHOLD = 30
+
+# Contrainte de precision minimale pour la strategie "rappel sous contrainte".
+_MIN_PRECISION = 0.95
+# Grille de seuils balayee sur la validation (de 0.05 a 0.95 par pas de 0.01).
+_THRESHOLD_GRID = [round(0.05 + 0.01 * i, 2) for i in range(0, 91)]
 
 
 # --------------------------------------------------------------------------- #
@@ -184,6 +201,109 @@ def _class_support(samples: List[PhishingSample]) -> Dict[int, int]:
 
 
 # --------------------------------------------------------------------------- #
+# Calibrage du seuil (sur la VALIDATION uniquement, ANTI-FUITE)
+# --------------------------------------------------------------------------- #
+def _predictions_at_threshold(
+    samples: List[PhishingSample],
+    scores: List[float],
+    threshold: float,
+    model: str = "tfidf_rf",
+) -> List[PhishingPrediction]:
+    """Construit des predictions a partir de scores bruts et d'un seuil donne.
+
+    Args:
+        samples: echantillons alignes sur ``scores``.
+        scores: scores de phishing ∈ [0, 1] (sortie de ``predict_scores``).
+        threshold: seuil de decision a appliquer.
+        model: nom du modele a renseigner dans la prediction.
+
+    Returns:
+        Liste de :class:`PhishingPrediction` (un par echantillon).
+    """
+    return [
+        PhishingPrediction(
+            sample_id=s.id,
+            is_phishing=score >= threshold,
+            score=round(float(score), 4),
+            model=model,
+        )
+        for s, score in zip(samples, scores)
+    ]
+
+
+def calibrate_threshold(
+    val_samples: List[PhishingSample],
+    val_scores: List[float],
+    min_precision: float = _MIN_PRECISION,
+) -> Tuple[float, Dict[str, object]]:
+    """Choisit le meilleur seuil sur la VALIDATION (anti-fuite).
+
+    Strategie :
+
+    1. Parmi les seuils dont la precision >= ``min_precision``, retenir celui qui
+       maximise le RAPPEL (puis le F1 en cas d'egalite) ; cela exploite la marge
+       d'une precision elevee pour AUGMENTER le rappel sans s'effondrer.
+    2. Si AUCUN seuil n'atteint ``min_precision`` sur la val, retomber sur le
+       seuil qui maximise le F1 global.
+
+    Args:
+        val_samples: echantillons de validation labellises.
+        val_scores: scores de phishing ∈ [0, 1] du modele sur la validation.
+        min_precision: contrainte de precision minimale (defaut 0.95).
+
+    Returns:
+        Couple ``(chosen_threshold, info)`` ou ``info`` documente la strategie
+        retenue et les metriques de validation au seuil choisi.
+    """
+    best_f1_thr = settings.phishing_threshold
+    best_f1_val = -1.0
+    best_f1_metrics: Dict[str, object] = {}
+
+    best_constrained_thr: Optional[float] = None
+    best_constrained_recall = -1.0
+    best_constrained_f1 = -1.0
+    best_constrained_metrics: Dict[str, object] = {}
+
+    for thr in _THRESHOLD_GRID:
+        preds = _predictions_at_threshold(val_samples, val_scores, thr)
+        m = evaluate_predictions(val_samples, preds)
+        f1 = float(m.get("f1", 0.0))
+        prec = float(m.get("precision", 0.0))
+        rec = float(m.get("recall", 0.0))
+
+        # Suivi du meilleur F1 global (repli).
+        if f1 > best_f1_val:
+            best_f1_val = f1
+            best_f1_thr = thr
+            best_f1_metrics = m
+
+        # Suivi du meilleur rappel sous contrainte de precision.
+        if prec >= min_precision:
+            if rec > best_constrained_recall or (
+                rec == best_constrained_recall and f1 > best_constrained_f1
+            ):
+                best_constrained_recall = rec
+                best_constrained_f1 = f1
+                best_constrained_thr = thr
+                best_constrained_metrics = m
+
+    if best_constrained_thr is not None:
+        info = {
+            "strategy": f"max_recall@precision>={min_precision}",
+            "min_precision": min_precision,
+            "val_metrics": best_constrained_metrics,
+        }
+        return best_constrained_thr, info
+
+    info = {
+        "strategy": "max_f1 (contrainte de precision inatteignable sur val)",
+        "min_precision": min_precision,
+        "val_metrics": best_f1_metrics,
+    }
+    return best_f1_thr, info
+
+
+# --------------------------------------------------------------------------- #
 # Entrainement TF-IDF
 # --------------------------------------------------------------------------- #
 def _train_tfidf(
@@ -193,7 +313,7 @@ def _train_tfidf(
     val_size: float,
     seed: int,
 ) -> int:
-    """Entraine, evalue sur le TEST tenu a l'ecart, et versionne le modele.
+    """Entraine, calibre le seuil (val), evalue sur le TEST, et versionne.
 
     Returns:
         Code de sortie (0 = succes, 1 = echec).
@@ -232,30 +352,72 @@ def _train_tfidf(
             _SMALL_DATASET_THRESHOLD,
         )
 
-    # Split stratifie : le TEST n'est JAMAIS vu a l'entrainement.
+    # Split stratifie : le TEST n'est JAMAIS vu (ni a l'entrainement ni au
+    # calibrage) ; la VAL sert uniquement au calibrage du seuil.
     train, val, test = _stratified_split(labeled, test_size, val_size, seed)
     logger.info(
         "Split : train=%d, val=%d, test=%d.", len(train), len(val), len(test)
     )
 
-    # Entrainement sur train (+ val, simple agregation pour stabiliser le baseline).
-    fit_samples = train + val
+    # ANTI-FUITE : on entraine sur le TRAIN seul (la VAL doit rester non vue par
+    # le modele pour calibrer le seuil honnetement). Si la VAL est vide, on
+    # retombe sur train (calibrage degrade, signale).
     detector = PhishingDetector()
-    detector.train(fit_samples)
+    detector.train(train)
     if not detector.is_trained:
         logger.error("L'entrainement TF-IDF n'a pas abouti (dependances ?). Arret.")
         return 1
 
-    # Evaluation HONNETE sur le test tenu a l'ecart.
+    # --- Calibrage du seuil sur la VALIDATION ---
+    default_threshold = float(settings.phishing_threshold)
+    chosen_threshold = default_threshold
+    calib_info: Dict[str, object] = {"strategy": "defaut (pas de validation)"}
+    if val:
+        val_scores = detector.predict_scores(val)
+        chosen_threshold, calib_info = calibrate_threshold(val, val_scores)
+        logger.info(
+            "Seuil calibre sur la validation : %.3f (strategie=%s).",
+            chosen_threshold,
+            calib_info.get("strategy"),
+        )
+    else:
+        logger.warning(
+            "Validation vide : pas de calibrage, seuil par defaut %.3f conserve.",
+            default_threshold,
+        )
+    detector.set_threshold(chosen_threshold, calibrated=bool(val))
+
+    # --- Evaluation HONNETE sur le test tenu a l'ecart ---
     if not test:
         logger.warning(
             "Test vide (donnees insuffisantes) : evaluation sur train (indicative)."
         )
-        eval_set = fit_samples
+        eval_set = train
     else:
         eval_set = test
-    metrics = evaluate_predictions(eval_set, detector.predict(eval_set))
+
+    test_scores = detector.predict_scores(eval_set)
+
+    # Metriques AVANT calibrage (seuil par defaut) pour la transparence.
+    preds_default = _predictions_at_threshold(eval_set, test_scores, default_threshold)
+    metrics_default = evaluate_predictions(eval_set, preds_default)
+
+    # Metriques APRES calibrage (seuil retenu) = metriques officielles.
+    preds_chosen = _predictions_at_threshold(eval_set, test_scores, chosen_threshold)
+    metrics = evaluate_predictions(eval_set, preds_chosen)
+
+    print(f"\n>>> Seuil par defaut (config) : {default_threshold:.3f}")
+    print(f">>> Seuil CALIBRE retenu      : {chosen_threshold:.3f} "
+          f"(strategie : {calib_info.get('strategy')})")
+    print("\n--- TEST @ seuil par defaut (avant calibrage) ---")
+    print_report(metrics_default)
+    print("\n--- TEST @ seuil CALIBRE (apres calibrage) ---")
     print_report(metrics)
+
+    # Metriques ventilees par source (transparence sur la generalisation).
+    by_source = evaluate_by_source(eval_set, preds_chosen)
+    print()
+    print_by_source_report(by_source)
 
     support = _class_support(eval_set)
     logger.info(
@@ -263,7 +425,7 @@ def _train_tfidf(
         support.get(0, 0),
         support.get(1, 0),
     )
-    print(f" Support set d'eval  legitime (0) : {support.get(0, 0)}")
+    print(f"\n Support set d'eval  legitime (0) : {support.get(0, 0)}")
     print(f" Support set d'eval  phishing (1) : {support.get(1, 0)}")
 
     # Compatibilite : conserve aussi l'alias joblib historique.
@@ -286,6 +448,13 @@ def _train_tfidf(
         },
         "eval_set": "test" if test else "train_fallback",
         "support_eval": support,
+        # --- Seuil calibre + transparence ---
+        "default_threshold": default_threshold,
+        "chosen_threshold": chosen_threshold,
+        "calibration": calib_info,
+        "metrics_default_threshold": metrics_default,
+        "metrics_chosen_threshold": metrics,
+        "metrics_by_source": by_source,
         "legacy_alias": str(legacy_path) if legacy_path else None,
     }
     try:
@@ -340,8 +509,12 @@ def _train_bert(
         return 1
 
     eval_set = test if test else (train + val)
-    metrics = evaluate_predictions(eval_set, detector.predict(eval_set))
+    predictions = detector.predict(eval_set)
+    metrics = evaluate_predictions(eval_set, predictions)
     print_report(metrics)
+    by_source = evaluate_by_source(eval_set, predictions)
+    print()
+    print_by_source_report(by_source)
     support = _class_support(eval_set)
     print(f" Support set d'eval  legitime (0) : {support.get(0, 0)}")
     print(f" Support set d'eval  phishing (1) : {support.get(1, 0)}")
@@ -360,6 +533,7 @@ def _train_bert(
             "n_test": len(test),
         },
         "support_eval": support,
+        "metrics_by_source": by_source,
     }
     try:
         from src.bloc3_ia.model_registry import save_model
@@ -408,7 +582,7 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    """Pipeline : charge -> nettoie -> split -> entraine -> evalue (test) -> versionne.
+    """Pipeline : charge -> nettoie -> split -> entraine -> calibre -> evalue.
 
     Returns:
         Code de sortie du processus (0 = succes / sortie propre).

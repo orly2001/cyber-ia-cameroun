@@ -218,6 +218,40 @@ def latest_metrics(kind: str = "tfidf_rf") -> Dict[str, object]:
         logger.warning("Lecture de metrics.json impossible (%s).", exc)
         return {}
 
+def latest_meta(kind: str = "tfidf_rf") -> Dict[str, object]:
+    """Renvoie les métadonnées (``meta.json``) de la version courante.
+
+    Même logique de résolution que :func:`latest_metrics` (version courante via
+    l'alias, sinon la plus récente listée). Utile pour récupérer le seuil
+    calibré (``chosen_threshold``) et les métriques par source.
+
+    Args:
+        kind: type de modèle (défaut ``"tfidf_rf"``).
+
+    Returns:
+        Le contenu de ``meta.json``, ou ``{}`` si indisponible.
+    """
+    current_model = load_current(kind)
+    candidate_dir: Optional[Path] = None
+    if current_model is not None:
+        candidate_dir = current_model.parent
+    else:
+        versions = list_versions(kind)
+        if versions:
+            candidate_dir = versions[-1]
+
+    if candidate_dir is None:
+        return {}
+
+    meta_file = candidate_dir / "meta.json"
+    if not meta_file.exists():
+        return {}
+    try:
+        return json.loads(meta_file.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning("Lecture de meta.json impossible (%s).", exc)
+        return {}
+
 
 __all__ = [
     "REGISTRY_DIR",
@@ -225,4 +259,5 @@ __all__ = [
     "load_current",
     "list_versions",
     "latest_metrics",
+    "latest_meta",
 ]

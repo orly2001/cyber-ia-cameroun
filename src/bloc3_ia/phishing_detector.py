@@ -5,6 +5,14 @@ des :class:`PhishingPrediction`. Si aucun modèle n'est entraîné ni chargé, l
 méthode :meth:`predict` applique un REPLI HEURISTIQUE basé sur des mots-clés à
 risque, de sorte que le pipeline fonctionne sans entraînement préalable.
 
+Le seuil de décision (:attr:`PhishingDetector.threshold`) est, par ordre de
+priorité :
+
+1. le seuil CALIBRÉ persisté dans le ``meta.json`` du registre
+   (``chosen_threshold``), choisi sur le set de VALIDATION lors de
+   l'entraînement (voir :mod:`src.bloc3_ia.train`) ;
+2. à défaut, ``settings.phishing_threshold`` (repli de configuration).
+
 Tous les imports scikit-learn / joblib sont PARESSEUX.
 """
 
@@ -76,7 +84,9 @@ class PhishingDetector:
         """
         self.model_path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
         self._pipeline = None  # pipeline sklearn (vectorizer + classifieur)
-        self.threshold = settings.phishing_threshold
+        self.threshold = float(settings.phishing_threshold)
+        # ``True`` si ``self.threshold`` provient d'un calibrage persisté.
+        self.threshold_calibrated = False
 
     # ------------------------------------------------------------------ #
     # Entraînement
@@ -147,13 +157,47 @@ class PhishingDetector:
         return self
 
     # ------------------------------------------------------------------ #
+    # Scores bruts (utiles au calibrage du seuil)
+    # ------------------------------------------------------------------ #
+    def predict_scores(self, samples: List[PhishingSample]) -> List[float]:
+        """Renvoie le score de phishing ∈ [0, 1] par échantillon (sans seuil).
+
+        Expose les probabilités brutes de la classe positive (phishing), sans
+        appliquer de seuil de décision. Indispensable au CALIBRAGE du seuil sur
+        un set de validation (balayage des seuils) sans réentraîner le modèle.
+        Si aucun pipeline ML n'est chargé, on retombe sur le score heuristique.
+
+        Args:
+            samples: échantillons (idéalement prétraités).
+
+        Returns:
+            Liste de scores ∈ [0, 1], alignée sur ``samples``.
+        """
+        if self._pipeline is None:
+            return [
+                self._heuristic_score(s.clean_text or s.raw_text) for s in samples
+            ]
+        texts = [s.clean_text or s.raw_text for s in samples]
+        try:
+            proba = self._pipeline.predict_proba(texts)
+            classes = list(self._pipeline.classes_)
+            pos_idx = classes.index(1) if 1 in classes else len(classes) - 1
+            return [float(row[pos_idx]) for row in proba]
+        except Exception as exc:  # modèle corrompu / incompatible
+            logger.error("Échec du calcul des scores ML (%s) ; repli heuristique.", exc)
+            return [
+                self._heuristic_score(s.clean_text or s.raw_text) for s in samples
+            ]
+
+    # ------------------------------------------------------------------ #
     # Prédiction
     # ------------------------------------------------------------------ #
     def predict(self, samples: List[PhishingSample]) -> List[PhishingPrediction]:
         """Prédit le caractère phishing de chaque échantillon.
 
         Utilise le pipeline entraîné si disponible, sinon applique le repli
-        heuristique. ``is_phishing`` est dérivé de ``settings.phishing_threshold``.
+        heuristique. ``is_phishing`` est dérivé de :attr:`threshold` (seuil
+        calibré si disponible, sinon ``settings.phishing_threshold``).
 
         Args:
             samples: échantillons (idéalement prétraités).
@@ -167,17 +211,13 @@ class PhishingDetector:
 
     def _predict_ml(self, samples: List[PhishingSample]) -> List[PhishingPrediction]:
         """Prédiction via le pipeline scikit-learn entraîné."""
-        texts = [s.clean_text or s.raw_text for s in samples]
         try:
-            proba = self._pipeline.predict_proba(texts)
-            # Probabilité de la classe positive (phishing = 1).
-            classes = list(self._pipeline.classes_)
-            pos_idx = classes.index(1) if 1 in classes else len(classes) - 1
-            scores = [float(row[pos_idx]) for row in proba]
+            scores = self.predict_scores(samples)
         except Exception as exc:  # modèle corrompu / incompatible
             logger.error("Échec de la prédiction ML (%s) ; repli heuristique.", exc)
             return self._predict_heuristic(samples)
-
+        # Si predict_scores a basculé sur l'heuristique (pipeline KO), le modèle
+        # reste annoncé comme tfidf_rf : le score reflète déjà l'état réel.
         predictions = []
         for sample, score in zip(samples, scores):
             predictions.append(
@@ -230,6 +270,43 @@ class PhishingDetector:
         return min(score, 1.0)
 
     # ------------------------------------------------------------------ #
+    # Seuil calibré
+    # ------------------------------------------------------------------ #
+    def set_threshold(self, value: float, calibrated: bool = True) -> None:
+        """Définit le seuil de décision phishing.
+
+        Args:
+            value: nouveau seuil ∈ [0, 1] (borné par sécurité).
+            calibrated: marque ce seuil comme issu d'un calibrage (transparence).
+        """
+        self.threshold = min(max(float(value), 0.0), 1.0)
+        self.threshold_calibrated = bool(calibrated)
+
+    def _load_calibrated_threshold(self) -> None:
+        """Charge le seuil calibré (``chosen_threshold``) du registre, si présent.
+
+        Lit le ``meta.json`` de la version courante via
+        :func:`src.bloc3_ia.model_registry.latest_meta`. En cas d'absence ou
+        d'erreur, le seuil de configuration (``settings.phishing_threshold``)
+        reste en place.
+        """
+        try:
+            from src.bloc3_ia.model_registry import latest_meta
+
+            meta = latest_meta("tfidf_rf") or {}
+        except Exception as exc:  # registre absent / illisible
+            logger.debug("Méta du registre indisponible (%s).", exc)
+            return
+        chosen = meta.get("chosen_threshold")
+        if chosen is None:
+            return
+        try:
+            self.set_threshold(float(chosen), calibrated=True)
+            logger.info("Seuil calibré chargé depuis le registre : %.3f", self.threshold)
+        except (TypeError, ValueError):
+            logger.warning("chosen_threshold du registre illisible : %r", chosen)
+
+    # ------------------------------------------------------------------ #
     # Persistance
     # ------------------------------------------------------------------ #
     def save(self, path: Optional[Path] = None) -> Optional[Path]:
@@ -257,7 +334,7 @@ class PhishingDetector:
         return target
 
     def load(self, path: Optional[Path] = None) -> "PhishingDetector":
-        """Charge un pipeline persisté via joblib.
+        """Charge un pipeline persisté via joblib (et le seuil calibré associé).
 
         Ordre de résolution de la source quand ``path`` n'est pas fourni :
 
@@ -265,6 +342,10 @@ class PhishingDetector:
            (``model_registry.load_current("tfidf_rf")``) ;
         2. repli sur le chemin joblib historique (``self.model_path``) pour
            compatibilité avec l'existant.
+
+        Après chargement du pipeline, on tente de charger le seuil calibré
+        (``chosen_threshold``) depuis le ``meta.json`` du registre ; à défaut, le
+        seuil reste celui de la configuration.
 
         Args:
             path: chemin source explicite (court-circuite la résolution ci-dessus).
@@ -304,6 +385,10 @@ class PhishingDetector:
         except Exception as exc:
             logger.error("Échec du chargement du modèle (%s) : %s", source, exc)
             self._pipeline = None
+            return self
+
+        # Le pipeline est chargé : on tente d'appliquer le seuil calibré.
+        self._load_calibrated_threshold()
         return self
 
     @property
