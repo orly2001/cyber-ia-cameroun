@@ -1,422 +1,355 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SOC — IA & Cybersécurité Cameroun</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --panel: #161b22;
-      --panel-2: #1c2230;
-      --border: #2a313c;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #2f81f7;
-      --critical: #f85149;
-      --high: #f0883e;
-      --medium: #d29922;
-      --low: #3fb950;
-      --info: #58a6ff;
-      --ok: #238636;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 14px;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      padding: 16px 24px;
-      background: linear-gradient(90deg, #11161f, #161b22);
-      border-bottom: 1px solid var(--border);
-    }
-    header h1 {
-      font-size: 18px;
-      margin: 0;
-      letter-spacing: 0.4px;
-    }
-    header h1 .dot {
-      color: var(--low);
-      margin-right: 8px;
-    }
-    .actions { display: flex; gap: 10px; align-items: center; }
-    button {
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--panel-2);
-      color: var(--text);
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    button:hover { background: #283041; border-color: var(--accent); }
-    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    button.primary:hover { background: #1f6feb; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
-
-    #banner {
-      display: none;
-      margin-bottom: 16px;
-      padding: 10px 14px;
-      border-radius: 6px;
-      border: 1px solid var(--high);
-      background: rgba(240, 136, 62, 0.12);
-      color: var(--high);
-      font-size: 13px;
-    }
-
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-    .kpi {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 18px 20px;
-    }
-    .kpi .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .kpi .value { font-size: 30px; font-weight: 700; margin-top: 6px; }
-    .kpi.crit .value { color: var(--critical); }
-    .kpi.risk .value { color: var(--high); }
-
-    .charts {
-      display: grid;
-      grid-template-columns: 1fr 1.4fr;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-    @media (max-width: 880px) { .charts { grid-template-columns: 1fr; } }
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px 18px;
-    }
-    .card h2 { font-size: 14px; margin: 0 0 12px; color: var(--muted); font-weight: 600; }
-    .chart-wrap { position: relative; height: 240px; }
-
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 10px 12px; font-size: 13px; }
-    thead th {
-      color: var(--muted);
-      font-weight: 600;
-      border-bottom: 1px solid var(--border);
-      text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: 0.5px;
-    }
-    tbody tr { border-bottom: 1px solid #20262f; }
-    tbody tr:hover { background: var(--panel-2); }
-
-    .badge {
-      display: inline-block;
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-    }
-    .sev-CRITICAL { background: rgba(248,81,73,0.18); color: var(--critical); }
-    .sev-HIGH { background: rgba(240,136,62,0.18); color: var(--high); }
-    .sev-MEDIUM { background: rgba(210,153,34,0.18); color: var(--medium); }
-    .sev-LOW { background: rgba(63,185,80,0.18); color: var(--low); }
-    .sev-INFO { background: rgba(88,166,255,0.18); color: var(--info); }
-
-    .st-NEW { color: var(--info); }
-    .st-ACKNOWLEDGED { color: var(--medium); }
-    .st-RESOLVED { color: var(--low); }
-    .st-FALSE_POSITIVE { color: var(--muted); }
-
-    .risk-cell { font-weight: 700; }
-    .row-actions button { padding: 5px 9px; font-size: 12px; }
-
-    .table-card { margin-top: 0; }
-    .empty { text-align: center; color: var(--muted); padding: 30px; }
-    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 18px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard SOC — IA & Cybersécurité Cameroun</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#283041;
+    --txt:#e6edf3; --muted:#8b949e; --accent:#2f81f7; --accent2:#1f6feb;
+    --crit:#f85149; --high:#ff7b35; --med:#d29922; --low:#3fb950; --info:#58a6ff;
+    --ok:#3fb950; --warn:#d29922; --err:#f85149;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+  header{background:linear-gradient(90deg,#0d1117,#161b22);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  header h1{font-size:18px;margin:0;font-weight:600}
+  header h1 span{color:var(--accent)}
+  .topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .nav a{color:var(--muted);text-decoration:none;margin-left:14px;font-size:13px}
+  .nav a:hover{color:var(--txt)}
+  .status-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);margin-right:6px;vertical-align:middle}
+  .status-dot.up{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+  .status-dot.down{background:var(--err);box-shadow:0 0 6px var(--err)}
+  main{padding:20px 24px;max-width:1400px;margin:0 auto}
+  .banner{display:none;padding:10px 16px;border-radius:8px;margin-bottom:16px;font-size:13px}
+  .banner.show{display:block}
+  .banner.error{background:rgba(248,81,73,.12);border:1px solid var(--err);color:#ffb4af}
+  .banner.info{background:rgba(47,129,247,.12);border:1px solid var(--accent);color:#a9ccff}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .kpi .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .kpi .value{font-size:30px;font-weight:700;margin-top:6px}
+  .kpi .sub{color:var(--muted);font-size:12px;margin-top:4px}
+  .kpi.crit .value{color:var(--crit)}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+  @media(max-width:860px){.charts{grid-template-columns:1fr}}
+  .card h3{margin:0 0 12px;font-size:14px;font-weight:600}
+  .chart-wrap{position:relative;height:260px}
+  .toolbar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  select,input,button{font-family:inherit;font-size:13px}
+  select,input{background:var(--panel2);border:1px solid var(--border);color:var(--txt);border-radius:7px;padding:8px 10px;outline:none}
+  select:focus,input:focus{border-color:var(--accent)}
+  button{cursor:pointer;border:none;border-radius:7px;padding:9px 14px;font-weight:600;background:var(--accent2);color:#fff;transition:.15s}
+  button:hover{background:var(--accent)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--border);color:var(--txt)}
+  button.ghost:hover{border-color:var(--accent);color:var(--accent)}
+  button.sm{padding:5px 10px;font-size:12px}
+  .spacer{flex:1}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  tbody tr:hover{background:var(--panel2)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+  .sev-CRITICAL{background:rgba(248,81,73,.18);color:var(--crit)}
+  .sev-HIGH{background:rgba(255,123,53,.18);color:var(--high)}
+  .sev-MEDIUM{background:rgba(210,153,34,.18);color:var(--med)}
+  .sev-LOW{background:rgba(63,185,80,.18);color:var(--low)}
+  .sev-INFO{background:rgba(88,166,255,.18);color:var(--info)}
+  .st-NEW{background:rgba(47,129,247,.18);color:var(--accent)}
+  .st-ACKNOWLEDGED{background:rgba(210,153,34,.18);color:var(--med)}
+  .st-RESOLVED{background:rgba(63,185,80,.18);color:var(--low)}
+  .st-FALSE_POSITIVE{background:rgba(139,148,158,.2);color:var(--muted)}
+  .risk-bar{height:6px;border-radius:4px;background:var(--border);margin-top:5px;overflow:hidden;min-width:80px}
+  .risk-bar i{display:block;height:100%}
+  .actions{display:flex;gap:6px;flex-wrap:wrap}
+  .empty{text-align:center;color:var(--muted);padding:30px}
+  .muted{color:var(--muted)}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transform:translateY(10px);transition:.25s;z-index:50}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.ok{border-left-color:var(--ok)}
+  .toast.err{border-left-color:var(--err)}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:24px}
+  .row{display:flex;align-items:center;gap:8px}
+  .demo-tag{font-size:10px;background:var(--warn);color:#000;padding:1px 7px;border-radius:4px;font-weight:700}
+</style>
 </head>
 <body>
-  <header>
-    <h1><span class="dot">&#9679;</span>SOC — IA &amp; Cybersécurité Cameroun</h1>
-    <div class="actions">
-      <span id="conn-status" style="color: var(--muted); font-size: 12px;"></span>
-      <button id="btn-refresh" onclick="refreshAll()">Rafraîchir</button>
-      <a href="console.html" style="color:#3b82f6;text-decoration:none;font-size:13px;margin-right:6px">Console d'analyse &#8594;</a>
-      <button id="btn-demo" class="primary" onclick="runDemo()">Lancer la démo</button>
+<header>
+  <h1>SOC <span>· IA &amp; Cybersécurité Cameroun</span></h1>
+  <div class="topbar-right">
+    <span class="row"><span id="apiDot" class="status-dot"></span><span id="apiState" class="muted">Connexion…</span></span>
+    <span id="demoMode" class="demo-tag" style="display:none">MODE DÉMO</span>
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="console.html">Console d'analyse</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div id="banner" class="banner"></div>
+
+  <div class="toolbar">
+    <div class="field">
+      <label>Clé API (optionnelle)</label>
+      <input id="apiKey" type="password" placeholder="X-API-Key" style="width:180px">
     </div>
-  </header>
+    <div class="spacer"></div>
+    <button id="btnRefresh" class="ghost">↻ Rafraîchir</button>
+    <button id="btnDemo">▶ Lancer la démo</button>
+  </div>
 
-  <main>
-    <div id="banner"></div>
+  <section class="kpis">
+    <div class="card kpi"><div class="label">Total alertes</div><div id="kpiTotal" class="value">—</div><div class="sub">toutes sévérités</div></div>
+    <div class="card kpi crit"><div class="label">Alertes critiques</div><div id="kpiCrit" class="value">—</div><div class="sub">sévérité CRITICAL</div></div>
+    <div class="card kpi"><div class="label">Risque moyen</div><div id="kpiRisk" class="value">—</div><div class="sub">score composite /100</div></div>
+    <div class="card kpi"><div class="label">Modèle de détection</div><div id="kpiModel" class="value" style="font-size:20px">—</div><div id="kpiModelSub" class="sub">—</div></div>
+  </section>
 
-    <section class="kpis">
-      <div class="kpi"><div class="label">Total alertes</div><div class="value" id="kpi-total">—</div></div>
-      <div class="kpi crit"><div class="label">Alertes critiques</div><div class="value" id="kpi-crit">—</div></div>
-      <div class="kpi risk"><div class="label">Risque moyen</div><div class="value" id="kpi-risk">—</div></div>
-    </section>
+  <section class="charts">
+    <div class="card"><h3>Répartition par sévérité</h3><div class="chart-wrap"><canvas id="sevChart"></canvas></div></div>
+    <div class="card"><h3>Alertes par statut</h3><div class="chart-wrap"><canvas id="statChart"></canvas></div></div>
+  </section>
 
-    <section class="charts">
-      <div class="card">
-        <h2>Répartition par sévérité</h2>
-        <div class="chart-wrap"><canvas id="chart-severity"></canvas></div>
+  <section class="card">
+    <div class="toolbar" style="margin-bottom:14px">
+      <div class="field"><label>Sévérité</label>
+        <select id="fSeverity"><option value="">Toutes</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option><option>INFO</option></select>
       </div>
-      <div class="card">
-        <h2>Alertes par statut</h2>
-        <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+      <div class="field"><label>Statut</label>
+        <select id="fStatus"><option value="">Tous</option><option>NEW</option><option>ACKNOWLEDGED</option><option>RESOLVED</option><option>FALSE_POSITIVE</option></select>
       </div>
-    </section>
-
-    <section class="card table-card">
-      <h2>Alertes</h2>
+      <div class="field"><label>Risque min.</label>
+        <input id="fMinRisk" type="number" min="0" max="100" step="1" placeholder="0" style="width:90px">
+      </div>
+      <button id="btnFilter" class="ghost">Filtrer</button>
+      <div class="spacer"></div>
+      <span id="alertCount" class="muted"></span>
+    </div>
+    <div style="overflow-x:auto">
       <table>
-        <thead>
-          <tr>
-            <th>Titre</th>
-            <th>Sévérité</th>
-            <th>Risque</th>
-            <th>Statut</th>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="alerts-body">
-          <tr><td colspan="6" class="empty">Chargement…</td></tr>
-        </tbody>
+        <thead><tr><th>Titre</th><th>Sévérité</th><th>Risque</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="alertBody"><tr><td colspan="6" class="empty">Chargement…</td></tr></tbody>
       </table>
-    </section>
-  </main>
+    </div>
+  </section>
+</main>
 
-  <footer>Projet tutoré — IA &amp; Cybersécurité Cameroun · Bloc 5 Dashboard SOC</footer>
+<footer>Bloc 5 — Dashboard SOC · Données servies par l'API FastAPI · <span id="lastUpdate"></span></footer>
+<div id="toast" class="toast"></div>
 
-  <script>
-    // ====== Configuration ======
-    const API_BASE = "http://localhost:8000";
+<script>
+/* ===================== CONFIGURATION ===================== */
+const API_BASE = "http://localhost:8000";   // <-- adapter si l'API tourne ailleurs
+/* ======================================================== */
 
-    // Couleurs cohérentes avec les sévérités / statuts
-    const SEV_COLORS = {
-      CRITICAL: "#f85149", HIGH: "#f0883e", MEDIUM: "#d29922",
-      LOW: "#3fb950", INFO: "#58a6ff"
-    };
-    const STATUS_COLORS = {
-      NEW: "#58a6ff", ACKNOWLEDGED: "#d29922",
-      RESOLVED: "#3fb950", FALSE_POSITIVE: "#8b949e"
-    };
-    const SEV_ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
-    const STATUS_ORDER = ["NEW", "ACKNOWLEDGED", "RESOLVED", "FALSE_POSITIVE"];
+const $ = (id) => document.getElementById(id);
+let sevChart=null, statChart=null, offline=false;
 
-    let severityChart = null;
-    let statusChart = null;
+function getApiKey(){ return ($("apiKey").value || "").trim(); }
+function authHeaders(extra){
+  const h = Object.assign({}, extra||{});
+  const k = getApiKey();
+  if(k) h["X-API-Key"] = k;
+  return h;
+}
 
-    // ====== Données de démonstration locales (repli hors-ligne) ======
-    const DEMO_ALERTS = [
-      { id: "demo-1", title: "Campagne phishing MoMo + portail vulnérable", risk_score: 92.4,
-        severity: "CRITICAL", status: "NEW", created_at: "2026-06-07T08:12:00Z" },
-      { id: "demo-2", title: "SMS frauduleux Orange Money détecté", risk_score: 81.0,
-        severity: "HIGH", status: "NEW", created_at: "2026-06-07T07:40:00Z" },
-      { id: "demo-3", title: "Service SSH exposé (CVE-2024-1234)", risk_score: 67.5,
-        severity: "MEDIUM", status: "ACKNOWLEDGED", created_at: "2026-06-06T19:05:00Z" },
-      { id: "demo-4", title: "URL de collecte d'identifiants signalée", risk_score: 74.2,
-        severity: "HIGH", status: "NEW", created_at: "2026-06-06T15:22:00Z" },
-      { id: "demo-5", title: "En-tête HTTP obsolète sur portail public", risk_score: 33.1,
-        severity: "LOW", status: "RESOLVED", created_at: "2026-06-05T11:00:00Z" }
-    ];
+function toast(msg, kind){
+  const t=$("toast"); t.textContent=msg; t.className="toast show "+(kind||"");
+  setTimeout(()=>{ t.className="toast "+(kind||""); }, 3800);
+}
+function showBanner(msg, kind){
+  const b=$("banner"); b.textContent=msg; b.className="banner show "+(kind||"info");
+}
+function hideBanner(){ $("banner").className="banner"; }
 
-    let offline = false;
+/* Traduction d'une erreur HTTP en message FR explicite. */
+async function describeError(resp){
+  let detail="";
+  try{ const j=await resp.json(); detail=j.detail||j.message||""; }catch(e){}
+  switch(resp.status){
+    case 400: return "Requête invalide. "+detail;
+    case 401: return "Accès refusé : clé API invalide ou manquante. Renseignez le champ « Clé API ».";
+    case 404: return "Ressource introuvable. "+detail;
+    case 413: return "Fichier trop volumineux (limite 2 Mo).";
+    case 429: return "Trop de requêtes (limite de débit atteinte). Patientez quelques secondes.";
+    default: return "Erreur "+resp.status+(detail?" : "+detail:".");
+  }
+}
 
-    // ====== Bannière / statut connexion ======
-    function setBanner(msg) {
-      const b = document.getElementById("banner");
-      if (!msg) { b.style.display = "none"; return; }
-      b.style.display = "block";
-      b.textContent = msg;
-    }
-    function setConnStatus(ok) {
-      const el = document.getElementById("conn-status");
-      el.textContent = ok ? "● API connectée" : "● Mode hors-ligne";
-      el.style.color = ok ? "var(--low)" : "var(--high)";
-    }
+async function apiGet(path){
+  const r = await fetch(API_BASE+path, {headers: authHeaders()});
+  if(!r.ok) throw new Error(await describeError(r));
+  return r.json();
+}
+async function apiSend(method, path, body){
+  const opts={ method, headers: authHeaders({"Content-Type":"application/json"}) };
+  if(body!==undefined) opts.body=JSON.stringify(body);
+  const r = await fetch(API_BASE+path, opts);
+  if(!r.ok) throw new Error(await describeError(r));
+  return r.json();
+}
 
-    // ====== Appels API ======
-    async function apiGet(path) {
-      const res = await fetch(API_BASE + path);
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.json();
-    }
+function setApiState(up){
+  offline = !up;
+  $("apiDot").className = "status-dot "+(up?"up":"down");
+  $("apiState").textContent = up ? "API connectée" : "API injoignable";
+  $("demoMode").style.display = up ? "none" : "inline-block";
+}
 
-    function computeStatsFromAlerts(alerts) {
-      const by_severity = {}, by_status = {};
-      let sum = 0;
-      alerts.forEach(a => {
-        by_severity[a.severity] = (by_severity[a.severity] || 0) + 1;
-        by_status[a.status] = (by_status[a.status] || 0) + 1;
-        sum += a.risk_score;
-      });
-      const top = [...alerts].sort((x, y) => y.risk_score - x.risk_score).slice(0, 5);
-      return {
-        total: alerts.length,
-        by_severity, by_status,
-        average_risk: alerts.length ? +(sum / alerts.length).toFixed(2) : 0,
-        top_alerts: top
-      };
-    }
+const SEV_COLORS={CRITICAL:"#f85149",HIGH:"#ff7b35",MEDIUM:"#d29922",LOW:"#3fb950",INFO:"#58a6ff"};
+const ST_COLORS={NEW:"#2f81f7",ACKNOWLEDGED:"#d29922",RESOLVED:"#3fb950",FALSE_POSITIVE:"#8b949e"};
 
-    // ====== Rendu ======
-    function renderKpis(stats) {
-      document.getElementById("kpi-total").textContent = stats.total;
-      document.getElementById("kpi-crit").textContent = stats.by_severity.CRITICAL || 0;
-      document.getElementById("kpi-risk").textContent = (stats.average_risk || 0).toFixed(1);
-    }
+function fmtDate(iso){
+  if(!iso) return "—";
+  try{ const d=new Date(iso); return d.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}); }
+  catch(e){ return iso; }
+}
 
-    function renderSeverityChart(by_severity) {
-      const labels = SEV_ORDER.filter(s => by_severity[s]);
-      const data = labels.map(s => by_severity[s]);
-      const colors = labels.map(s => SEV_COLORS[s]);
-      const ctx = document.getElementById("chart-severity");
-      if (severityChart) severityChart.destroy();
-      severityChart = new Chart(ctx, {
-        type: "doughnut",
-        data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: "#0d1117", borderWidth: 2 }] },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { position: "bottom", labels: { color: "#e6edf3", padding: 14 } } }
-        }
-      });
-    }
+/* -------- KPIs + graphiques (GET /api/stats, GET /api/model) -------- */
+async function loadStats(){
+  const s = await apiGet("/api/stats");
+  $("kpiTotal").textContent = s.total ?? 0;
+  $("kpiCrit").textContent = (s.by_severity && s.by_severity.CRITICAL) || 0;
+  $("kpiRisk").textContent = (s.average_risk ?? 0).toFixed(1);
+  drawSeverity(s.by_severity||{});
+  drawStatus(s.by_status||{});
+}
 
-    function renderStatusChart(by_status) {
-      const labels = STATUS_ORDER.filter(s => by_status[s] !== undefined);
-      const data = labels.map(s => by_status[s] || 0);
-      const colors = labels.map(s => STATUS_COLORS[s]);
-      const ctx = document.getElementById("chart-status");
-      if (statusChart) statusChart.destroy();
-      statusChart = new Chart(ctx, {
-        type: "bar",
-        data: { labels, datasets: [{ label: "Alertes", data, backgroundColor: colors, borderRadius: 4 }] },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { color: "#8b949e" }, grid: { display: false } },
-            y: { ticks: { color: "#8b949e", precision: 0 }, grid: { color: "#20262f" }, beginAtZero: true }
-          }
-        }
-      });
-    }
+async function loadModel(){
+  try{
+    const m = await apiGet("/api/model");
+    $("kpiModel").textContent = (m.type||"?").toUpperCase();
+    const acc = m.metrics && (m.metrics.f1 ?? m.metrics.accuracy);
+    const parts=[];
+    parts.push(m.trained ? "entraîné" : "repli heuristique");
+    parts.push("seuil "+(m.threshold ?? 0.5).toFixed(2)+(m.threshold_calibrated?" (calibré)":""));
+    if(acc!==undefined && acc!==null) parts.push("f1≈"+Number(acc).toFixed(2));
+    $("kpiModelSub").textContent = parts.join(" · ");
+  }catch(e){
+    $("kpiModel").textContent="—"; $("kpiModelSub").textContent="info modèle indisponible";
+  }
+}
 
-    function fmtDate(iso) {
-      if (!iso) return "—";
-      const d = new Date(iso);
-      if (isNaN(d)) return iso;
-      return d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-    }
+function drawSeverity(bySev){
+  const order=["CRITICAL","HIGH","MEDIUM","LOW","INFO"];
+  const labels=order.filter(k=>bySev[k]);
+  const data=labels.map(k=>bySev[k]);
+  const colors=labels.map(k=>SEV_COLORS[k]);
+  const ctx=$("sevChart").getContext("2d");
+  if(sevChart) sevChart.destroy();
+  if(!labels.length){ ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height); return; }
+  sevChart=new Chart(ctx,{type:"doughnut",
+    data:{labels,datasets:[{data,backgroundColor:colors,borderColor:"#0d1117",borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"62%",
+      plugins:{legend:{position:"right",labels:{color:"#e6edf3",font:{size:12}}}}}});
+}
 
-    function renderTable(alerts) {
-      const body = document.getElementById("alerts-body");
-      if (!alerts.length) {
-        body.innerHTML = '<tr><td colspan="6" class="empty">Aucune alerte.</td></tr>';
-        return;
-      }
-      body.innerHTML = alerts.map(a => `
-        <tr>
-          <td>${escapeHtml(a.title)}</td>
-          <td><span class="badge sev-${a.severity}">${a.severity}</span></td>
-          <td class="risk-cell" style="color:${SEV_COLORS[a.severity] || '#fff'}">${a.risk_score.toFixed(1)}</td>
-          <td class="st-${a.status}">${a.status}</td>
-          <td>${fmtDate(a.created_at)}</td>
-          <td class="row-actions">
-            <button onclick="updateStatus('${a.id}','ACKNOWLEDGED')" ${offline ? "disabled" : ""}>Acquitter</button>
-            <button onclick="updateStatus('${a.id}','RESOLVED')" ${offline ? "disabled" : ""}>Résoudre</button>
-          </td>
-        </tr>`).join("");
-    }
+function drawStatus(byStat){
+  const order=["NEW","ACKNOWLEDGED","RESOLVED","FALSE_POSITIVE"];
+  const labels=order.filter(k=>byStat[k]!==undefined);
+  const data=labels.map(k=>byStat[k]||0);
+  const colors=labels.map(k=>ST_COLORS[k]);
+  const ctx=$("statChart").getContext("2d");
+  if(statChart) statChart.destroy();
+  if(!labels.length){ ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height); return; }
+  statChart=new Chart(ctx,{type:"bar",
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:"#8b949e"},grid:{display:false}},
+              y:{beginAtZero:true,ticks:{color:"#8b949e",precision:0},grid:{color:"#283041"}}}}});
+}
 
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, c => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[c]));
-    }
+/* -------- Tableau d'alertes (GET /api/alerts avec filtres) -------- */
+async function loadAlerts(){
+  const sev=$("fSeverity").value, st=$("fStatus").value, mr=$("fMinRisk").value;
+  const q=[];
+  if(sev) q.push("severity="+encodeURIComponent(sev));
+  if(st) q.push("status="+encodeURIComponent(st));
+  if(mr!=="") q.push("min_risk="+encodeURIComponent(mr));
+  const path="/api/alerts"+(q.length?"?"+q.join("&"):"");
+  const body=$("alertBody");
+  try{
+    const alerts=await apiGet(path);
+    $("alertCount").textContent=alerts.length+" alerte(s)";
+    if(!alerts.length){ body.innerHTML='<tr><td colspan="6" class="empty">Aucune alerte pour ces filtres.</td></tr>'; return; }
+    body.innerHTML=alerts.map(renderRow).join("");
+  }catch(e){
+    body.innerHTML='<tr><td colspan="6" class="empty">'+e.message+'</td></tr>';
+  }
+}
 
-    // ====== Orchestration ======
-    async function refreshAll() {
-      try {
-        const [alerts, stats] = await Promise.all([
-          apiGet("/api/alerts"),
-          apiGet("/api/stats")
-        ]);
-        offline = false;
-        setConnStatus(true);
-        setBanner("");
-        renderKpis(stats);
-        renderSeverityChart(stats.by_severity || {});
-        renderStatusChart(stats.by_status || {});
-        renderTable(alerts);
-      } catch (err) {
-        // Repli : données de démonstration locales
-        offline = true;
-        setConnStatus(false);
-        setBanner("API injoignable (" + API_BASE + "). Affichage des données de démonstration locales. Vérifiez que le serveur est lancé et que API_BASE est correct.");
-        const stats = computeStatsFromAlerts(DEMO_ALERTS);
-        renderKpis(stats);
-        renderSeverityChart(stats.by_severity);
-        renderStatusChart(stats.by_status);
-        renderTable(DEMO_ALERTS);
-      }
-    }
+function renderRow(a){
+  const risk=Math.round(a.risk_score||0);
+  const col=SEV_COLORS[a.severity]||"#58a6ff";
+  const disabled = offline ? "disabled title='Indisponible hors-ligne'" : "";
+  const canAck = a.status==="NEW";
+  const canRes = a.status!=="RESOLVED";
+  return '<tr>'
+    +'<td><div>'+esc(a.title)+'</div>'+(a.rationale?'<div class="muted" style="font-size:11px;margin-top:3px">'+esc(a.rationale)+'</div>':'')+'</td>'
+    +'<td><span class="pill sev-'+a.severity+'">'+a.severity+'</span></td>'
+    +'<td><b>'+risk+'</b><div class="risk-bar"><i style="width:'+risk+'%;background:'+col+'"></i></div></td>'
+    +'<td><span class="pill st-'+a.status+'">'+a.status+'</span></td>'
+    +'<td class="muted">'+fmtDate(a.created_at)+'</td>'
+    +'<td><div class="actions">'
+      +(canAck?'<button class="ghost sm" onclick="patchAlert(\''+a.id+'\',\'ACKNOWLEDGED\')" '+disabled+'>Acquitter</button>':'')
+      +(canRes?'<button class="ghost sm" onclick="patchAlert(\''+a.id+'\',\'RESOLVED\')" '+disabled+'>Résoudre</button>':'')
+    +'</div></td>'
+  +'</tr>';
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
-    async function updateStatus(id, status) {
-      if (offline) return;
-      try {
-        const res = await fetch(API_BASE + "/api/alerts/" + encodeURIComponent(id), {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status })
-        });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        await refreshAll();
-      } catch (err) {
-        setBanner("Échec de la mise à jour de l'alerte : " + err.message);
-      }
-    }
+/* -------- Actions : PATCH /api/alerts/{id} -------- */
+async function patchAlert(id,status){
+  try{
+    await apiSend("PATCH","/api/alerts/"+encodeURIComponent(id),{status});
+    toast("Alerte mise à jour : "+status,"ok");
+    await refreshAll();
+  }catch(e){ toast(e.message,"err"); }
+}
 
-    async function runDemo() {
-      const btn = document.getElementById("btn-demo");
-      btn.disabled = true;
-      btn.textContent = "Exécution…";
-      try {
-        const res = await fetch(API_BASE + "/api/run-demo", { method: "POST" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        if (data.success) {
-          setBanner(data.message || "Démo exécutée.");
-        } else {
-          setBanner("Démo : " + (data.message || "indisponible."));
-        }
-        await refreshAll();
-      } catch (err) {
-        setBanner("Impossible de lancer la démo (API injoignable) : " + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Lancer la démo";
-      }
-    }
+/* -------- Démo : POST /api/run-demo -------- */
+async function runDemo(){
+  const btn=$("btnDemo"); btn.disabled=true; const old=btn.textContent; btn.textContent="Exécution…";
+  try{
+    const r=await apiSend("POST","/api/run-demo");
+    if(r.success) toast(r.message||"Démo lancée.","ok");
+    else toast(r.message||"Démo indisponible.","err");
+    await refreshAll();
+  }catch(e){ toast(e.message,"err"); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
 
-    // Démarrage
-    refreshAll();
-  </script>
+/* -------- Orchestration -------- */
+async function refreshAll(){
+  try{
+    await apiGet("/health");
+    setApiState(true); hideBanner();
+    await Promise.all([loadStats(), loadModel(), loadAlerts()]);
+    $("lastUpdate").textContent="MAJ "+new Date().toLocaleTimeString("fr-FR");
+  }catch(e){
+    setApiState(false);
+    showBanner("API injoignable sur "+API_BASE+". Démarrez l'API (uvicorn) puis cliquez sur « Rafraîchir ». — "+e.message,"error");
+    $("alertBody").innerHTML='<tr><td colspan="6" class="empty">Données indisponibles : l\'API est injoignable.</td></tr>';
+    ["kpiTotal","kpiCrit","kpiRisk"].forEach(i=>$(i).textContent="—");
+  }
+}
+
+$("btnRefresh").onclick=refreshAll;
+$("btnDemo").onclick=runDemo;
+$("btnFilter").onclick=loadAlerts;
+["fSeverity","fStatus"].forEach(i=>$(i).addEventListener("change",loadAlerts));
+$("fMinRisk").addEventListener("keydown",e=>{ if(e.key==="Enter") loadAlerts(); });
+
+refreshAll();
+setInterval(refreshAll, 30000);
+</script>
 </body>
 </html>

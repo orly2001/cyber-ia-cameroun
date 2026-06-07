@@ -1,33 +1,52 @@
-# Dashboard SOC — Frontend (Bloc 5)
+# Frontend Bloc 5 — Dashboard SOC & Console d'analyse
 
-Tableau de bord SOC autonome (un seul fichier `index.html`, sans build tool).
-Affiche les KPI, deux graphiques (sévérité, statut) et le tableau des alertes
-servies par l'API du bloc 5.
+Deux pages autonomes (HTML + CSS + JS *inline*, sans outil de build). Seule
+dépendance externe : **Chart.js** chargé depuis le CDN Cloudflare (connexion
+Internet requise pour les graphiques). Les deux pages consomment l'API FastAPI
+du bloc 5.
 
-## Ouvrir le dashboard
+## Les deux pages
 
-1. Lancer l'API du bloc 5 (depuis la racine du projet) :
+### 1. `index.html` — Dashboard SOC (analystes)
 
-   ```bash
-   uvicorn src.bloc5_dashboard.api.main:app --reload --port 8000
-   ```
+Vue de supervision destinée à l'équipe sécurité.
 
-2. Ouvrir `index.html` dans un navigateur :
-   - double-clic sur le fichier, **ou**
-   - le servir en local pour éviter d'éventuels soucis CORS/navigateur :
+- **KPI** : total d'alertes, alertes critiques, risque moyen, et infos du modèle
+  de détection (`GET /api/model` : type, entraîné ou repli heuristique, seuil,
+  métriques).
+- **Graphiques** (Chart.js) : donut de répartition par sévérité, barres par statut.
+- **Tableau des alertes** avec filtres (sévérité, statut, risque minimum) et
+  boutons **Acquitter** / **Résoudre**.
+- Bouton **Lancer la démo** pour générer des alertes de démonstration.
+- **Repli propre** : si l'API est injoignable, un bandeau d'avertissement
+  s'affiche, l'indicateur d'état passe au rouge et les actions sont neutralisées
+  (pas de page blanche). Rafraîchissement automatique toutes les 30 s.
 
-     ```bash
-     # depuis src/bloc5_dashboard/frontend
-     python -m http.server 5173
-     # puis ouvrir http://localhost:5173
-     ```
+Endpoints utilisés : `GET /health`, `GET /api/stats`, `GET /api/model`,
+`GET /api/alerts` (avec filtres `severity`, `status`, `min_risk`),
+`PATCH /api/alerts/{id}`, `POST /api/run-demo`.
 
-   Les origines `http://localhost:5173` et `http://localhost:3000` sont
-   autorisées par défaut côté API (voir `settings.cors_origins`).
+### 2. `console.html` — Console d'analyse temps réel (usagers)
 
-## Configurer l'adresse de l'API
+Outil d'analyse à la demande pour les usagers.
 
-En haut du bloc `<script>` de `index.html` :
+- **Analyse d'un message** : zone de saisie + canal (SMS / EMAIL / URL) →
+  verdict (phishing / légitime) avec code couleur, score, indicateurs détectés et
+  texte nettoyé (`POST /api/analyze`).
+- **Upload de fichier** `.csv` (colonne `raw_text` obligatoire) ou `.txt`
+  (un message par ligne) → synthèse (n, n_phishing, taux) + tableau des résultats
+  par message (`POST /api/upload`).
+- **Flux temps réel** : interrogation toutes les ~3 s de `GET /api/live/recent`
+  et `GET /api/live/stats` pour afficher les derniers événements analysés et un
+  mini-graphe des scores récents (case « Actualisation auto » pour activer/couper).
+- Gestion explicite des erreurs **400 / 401 / 413 / 429** en français.
+
+Endpoints utilisés : `GET /health`, `POST /api/analyze`, `POST /api/upload`,
+`GET /api/live/recent`, `GET /api/live/stats`.
+
+## Configurer l'adresse de l'API (`API_BASE`)
+
+En haut du bloc `<script>` de **chaque** page :
 
 ```js
 const API_BASE = "http://localhost:8000";
@@ -35,19 +54,42 @@ const API_BASE = "http://localhost:8000";
 
 Modifier cette constante si l'API tourne sur un autre hôte/port.
 
-## Mode hors-ligne
+## Clé API (en-tête `X-API-Key`)
 
-Si l'API est injoignable, le dashboard affiche un bandeau d'avertissement et
-bascule sur des **données de démonstration locales** afin que la page reste
-lisible. Les boutons d'action (Acquitter / Résoudre) sont désactivés dans ce mode.
+Certains endpoints sensibles (`PATCH /api/alerts/{id}`, `POST /api/run-demo`,
+`POST /api/upload`) peuvent exiger une clé d'API **si** une clé est configurée
+côté serveur (variable d'environnement `API_KEY`). En mode développement, sans
+clé configurée, ces endpoints sont ouverts.
 
-## Fonctionnalités
+Chaque page propose un champ **« Clé API »** : s'il est rempli, sa valeur est
+envoyée dans l'en-tête HTTP `X-API-Key`. En cas de réponse **401**, un message
+invite à renseigner ce champ. La réponse **429** (limite de débit) est aussi
+gérée par un message clair.
 
-- Cartes KPI : total des alertes, alertes critiques, risque moyen.
-- Graphique donut : répartition par sévérité.
-- Graphique barres : alertes par statut.
-- Tableau : titre, sévérité (code couleur), risque, statut, date.
-- Boutons **Acquitter** (`ACKNOWLEDGED`) et **Résoudre** (`RESOLVED`) → `PATCH /api/alerts/{id}`.
-- Bouton **Lancer la démo** → `POST /api/run-demo` puis rafraîchissement.
+## Lancer
 
-Chart.js est chargé depuis le CDN Cloudflare (connexion Internet requise pour les graphiques).
+1. Démarrer l'API du bloc 5 depuis la racine du projet :
+
+   ```bash
+   uvicorn src.bloc5_dashboard.api.main:app --reload --port 8000
+   ```
+
+2. Ouvrir les pages dans un navigateur :
+   - double-clic sur `index.html` / `console.html`, **ou**
+   - les servir en local (recommandé pour éviter d'éventuels soucis CORS) :
+
+     ```bash
+     # depuis src/bloc5_dashboard/frontend
+     python -m http.server 5173
+     # puis http://localhost:5173/index.html  et  /console.html
+     ```
+
+   Les origines `http://localhost:5173` et `http://localhost:3000` sont
+   autorisées par défaut côté API (voir `settings.cors_origins`).
+
+## Notes
+
+- Aucune dépendance hors Chart.js (CDN). Aucun `localStorage` requis.
+- Design SOC sombre, responsive (cartes et grilles s'adaptent au mobile).
+</content>
+</invoke>
