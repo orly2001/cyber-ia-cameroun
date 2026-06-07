@@ -194,9 +194,16 @@ class ModelInfo(BaseModel):
 
     type: str = Field(..., description="Type effectif (heuristic | tfidf_rf | bert)")
     trained: bool = Field(False, description="True si un modèle ML est chargé")
-    threshold: float = Field(0.5, description="Seuil de décision phishing")
+    threshold: float = Field(0.5, description="Seuil de décision EFFECTIF utilisé")
+    threshold_calibrated: bool = Field(
+        False, description="True si le seuil provient d'un calibrage (sinon config)"
+    )
     metrics: dict = Field(
         default_factory=dict, description="Métriques du registre si disponibles"
+    )
+    metrics_by_source: dict = Field(
+        default_factory=dict,
+        description="Métriques precision/recall/f1 ventilées par source (si dispo)",
     )
 
 
@@ -524,17 +531,40 @@ def model_info() -> ModelInfo:
     else:
         kind = "heuristic"
 
+    # Seuil EFFECTIF réellement appliqué par le détecteur (calibré si dispo).
     threshold = float(getattr(detector, "threshold", 0.5))
+    threshold_calibrated = bool(getattr(detector, "threshold_calibrated", False))
 
     metrics: dict = {}
+    metrics_by_source: dict = {}
     try:
-        from src.bloc3_ia.model_registry import latest_metrics  # import paresseux
+        from src.bloc3_ia.model_registry import (  # import paresseux
+            latest_meta,
+            latest_metrics,
+        )
 
         metrics = latest_metrics("tfidf_rf") or {}
+        meta = latest_meta("tfidf_rf") or {}
+        metrics_by_source = meta.get("metrics_by_source") or {}
+        # Repli : si le registre porte un chosen_threshold mais que le détecteur
+        # ne l'a pas chargé (cas heuristique), on l'expose tout de même.
+        if not threshold_calibrated and meta.get("chosen_threshold") is not None:
+            try:
+                threshold = float(meta["chosen_threshold"])
+                threshold_calibrated = True
+            except (TypeError, ValueError):
+                pass
     except Exception as exc:  # noqa: BLE001 — registre optionnel
         logger.debug("Métriques du registre indisponibles (%s).", exc)
 
-    return ModelInfo(type=kind, trained=trained, threshold=threshold, metrics=metrics)
+    return ModelInfo(
+        type=kind,
+        trained=trained,
+        threshold=threshold,
+        threshold_calibrated=threshold_calibrated,
+        metrics=metrics,
+        metrics_by_source=metrics_by_source,
+    )
 
 
 __all__ = [

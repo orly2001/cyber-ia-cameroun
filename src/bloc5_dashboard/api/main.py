@@ -8,7 +8,8 @@ paresseusement.
 
 from __future__ import annotations
 
-from typing import List, Optional
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,12 +28,35 @@ from .realtime import router as realtime_router
 
 
 # --------------------------------------------------------------------------- #
+# Cycle de vie de l'application (gestionnaire lifespan moderne)
+# --------------------------------------------------------------------------- #
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Gestionnaire de cycle de vie de l'application FastAPI.
+
+    Remplace l'ancien ``@app.on_event("startup")`` (déprécié). Au démarrage,
+    on vérifie la sécurité de production puis on initialise la base ; aucune
+    action n'est requise à l'arrêt (comportement identique à l'ancien hook).
+
+    Args:
+        _app: instance FastAPI (non utilisée, requise par la signature).
+
+    Yields:
+        ``None`` : la durée de vie de l'application est encadrée par ce bloc.
+    """
+    enforce_production_security()
+    init_db()
+    yield
+
+
+# --------------------------------------------------------------------------- #
 # Application & CORS
 # --------------------------------------------------------------------------- #
 app = FastAPI(
     title="SOC API — IA & Cybersécurité Cameroun",
     description="API de lecture et de gestion des alertes de sécurité (bloc 5).",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 _cors_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
@@ -67,13 +91,6 @@ async def _security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     return response
-
-
-@app.on_event("startup")
-def _on_startup() -> None:
-    """Verifie la securite de prod puis initialise la base au demarrage."""
-    enforce_production_security()
-    init_db()
 
 
 # Routers métier : inférence (analyse/upload/modèle) et temps réel (logs live).
