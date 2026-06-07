@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/><mxCell id="1" parent="0"/>
+
+    <!-- PAGE TITLE -->
+    <mxCell id="title" value="Bloc 4 — Moteur de corrélation  |  Bloc 5 — Dashboard SOC (Use Case)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=15;fontStyle=1;fontColor=#1B3A6B;" vertex="1" parent="1">
+      <mxGeometry x="80" y="20" width="1460" height="36" as="geometry"/>
+    </mxCell>
+
+    <!-- ══════════ BLOC 4 ══════════ -->
+    <mxCell id="bg4" value="" style="rounded=1;fillColor=#fff8e6;strokeColor=#BA7517;opacity=40;" vertex="1" parent="1">
+      <mxGeometry x="60" y="70" width="700" height="760" as="geometry"/>
+    </mxCell>
+    <mxCell id="lbl4" value="BLOC 4 — Moteur de corrélation  —  Commun C2 + I1" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=13;fontStyle=1;fontColor=#854F0B;" vertex="1" parent="1">
+      <mxGeometry x="60" y="76" width="700" height="24" as="geometry"/>
+    </mxCell>
+
+    <!-- Inputs -->
+    <mxCell id="in4a" value="Score phishing + domaine&#xa;(depuis Bloc 3a)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0F6E56;strokeColor=#0F6E56;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="120" width="200" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="in4b" value="Score vulnérabilité + endpoint&#xa;(depuis Bloc 3b)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#C0522A;strokeColor=#C0522A;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="120" width="220" height="55" as="geometry"/>
+    </mxCell>
+
+    <!-- Règle 1 -->
+    <mxCell id="r1" value="Règle R1 : Correspondance exacte de domaine&#xa;URL phishing ↔ domaine du site vulnérable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#BA7517;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="130" y="230" width="500" height="50" as="geometry"/>
+    </mxCell>
+    <!-- Règle 2 -->
+    <mxCell id="r2" value="Règle R2 : Similarité TLD / mots-clés de domaine&#xa;(distance de Levenshtein &lt; seuil ou mots communs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#BA7517;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="130" y="300" width="500" height="50" as="geometry"/>
+    </mxCell>
+    <!-- Règle 3 -->
+    <mxCell id="r3" value="Règle R3 : Co-occurrence temporelle&#xa;(phishing + vulnérabilité dans la même plage IP ± 24h)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#BA7517;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="130" y="370" width="500" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Décision corrélation -->
+    <mxCell id="d4" value="Corrélation&#xa;établie ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff8e6;strokeColor=#BA7517;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="460" width="180" height="70" as="geometry"/>
+    </mxCell>
+
+    <!-- Pas de corrélation -->
+    <mxCell id="nc" value="Alerte simple&#xa;(vuln ou phishing isolé)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#888888;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="475" width="160" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Calcul score composite -->
+    <mxCell id="sc" value="Calcul score risque composite&#xa;S = α·score_vuln + β·score_phishing + γ·R" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e6;strokeColor=#BA7517;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="130" y="580" width="500" height="55" as="geometry"/>
+    </mxCell>
+
+    <!-- Niveau alerte -->
+    <mxCell id="sev" value="Niveau alerte : Critique (≥8) / Élevé (6-8) / Moyen (4-6) / Faible (&lt;4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e6;strokeColor=#BA7517;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="130" y="660" width="500" height="44" as="geometry"/>
+    </mxCell>
+
+    <!-- Output -->
+    <mxCell id="out4" value="Alerte composite → PostgreSQL (table alertes)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#BA7517;strokeColor=#BA7517;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="740" width="360" height="55" as="geometry"/>
+    </mxCell>
+
+    <!-- Arrows B4 -->
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0F6E56;" edge="1" parent="1" source="in4a" target="r1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C0522A;" edge="1" parent="1" source="in4b" target="r1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#BA7517;" edge="1" parent="1" source="r1" target="r2"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#BA7517;" edge="1" parent="1" source="r2" target="r3"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#BA7517;" edge="1" parent="1" source="r3" target="d4"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell value="Non" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#888888;" edge="1" parent="1" source="d4" target="nc"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell value="Oui" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#BA7517;" edge="1" parent="1" source="d4" target="sc"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#BA7517;" edge="1" parent="1" source="sc" target="sev"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#BA7517;" edge="1" parent="1" source="sev" target="out4"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <!-- ══════════ BLOC 5 — USE CASE ══════════ -->
+    <mxCell id="bg5" value="" style="rounded=1;fillColor=#e8f0fe;strokeColor=#1B3A6B;opacity=40;" vertex="1" parent="1">
+      <mxGeometry x="820" y="70" width="760" height="760" as="geometry"/>
+    </mxCell>
+    <mxCell id="lbl5" value="BLOC 5 — Dashboard SOC : Diagramme de cas d'utilisation (Use Case)  —  Cybersécurité C3" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=13;fontStyle=1;fontColor=#0D2148;" vertex="1" parent="1">
+      <mxGeometry x="820" y="76" width="760" height="24" as="geometry"/>
+    </mxCell>
+
+    <!-- Acteur Analyste -->
+    <mxCell id="actor" value="Analyste SOC" style="shape=mxgraph.flowchart.start_2;fillColor=#1B3A6B;strokeColor=#1B3A6B;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="850" y="340" width="90" height="90" as="geometry"/>
+    </mxCell>
+
+    <!-- Use cases -->
+    <mxCell id="uc1" value="Consulter les alertes triées&#xa;par criticité" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1B3A6B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="120" width="240" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2" value="Déclencher un scan ZAP&#xa;sur une URL cible" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1B3A6B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="210" width="240" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3" value="Soumettre un texte / URL&#xa;à l'analyse phishing" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1B3A6B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="300" width="240" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc4" value="Visualiser les graphiques&#xa;de tendance (30 jours)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1B3A6B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="390" width="240" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc5" value="Exporter un rapport&#xa;PDF / CSV" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1B3A6B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="480" width="240" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc6" value="Marquer une alerte&#xa;comme résolue / ignorée" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1B3A6B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="570" width="240" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc7" value="Annoter manuellement&#xa;un SMS / email du corpus" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1B3A6B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="660" width="240" height="55" as="geometry"/>
+    </mxCell>
+
+    <!-- Acteur Système IA -->
+    <mxCell id="sys" value="Système IA&#xa;(Blocs 1-4)" style="shape=mxgraph.flowchart.start_2;fillColor=#0F6E56;strokeColor=#0F6E56;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1370" y="340" width="90" height="90" as="geometry"/>
+    </mxCell>
+
+    <!-- Relations acteur → UC -->
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#1B3A6B;" edge="1" parent="1" source="actor" target="uc1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#1B3A6B;" edge="1" parent="1" source="actor" target="uc2"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#1B3A6B;" edge="1" parent="1" source="actor" target="uc3"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#1B3A6B;" edge="1" parent="1" source="actor" target="uc4"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#1B3A6B;" edge="1" parent="1" source="actor" target="uc5"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#1B3A6B;" edge="1" parent="1" source="actor" target="uc6"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#1B3A6B;" edge="1" parent="1" source="actor" target="uc7"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- Système → UC -->
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#0F6E56;dashed=1;" edge="1" parent="1" source="sys" target="uc1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#0F6E56;dashed=1;" edge="1" parent="1" source="sys" target="uc2"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=none;html=1;strokeColor=#0F6E56;dashed=1;" edge="1" parent="1" source="sys" target="uc4"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>

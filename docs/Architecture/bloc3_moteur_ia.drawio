@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/><mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Architecture Bloc 3 — Moteur d'intelligence artificielle (NLP + ML)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=15;fontStyle=1;fontColor=#1B3A6B;" vertex="1" parent="1">
+      <mxGeometry x="80" y="20" width="1460" height="36" as="geometry"/>
+    </mxCell>
+
+    <!-- ══ SOUS-MODULE 3a ══ -->
+    <mxCell id="bg3a" value="" style="rounded=1;fillColor=#e6f4ee;strokeColor=#0F6E56;opacity=40;" vertex="1" parent="1">
+      <mxGeometry x="60" y="70" width="680" height="700" as="geometry"/>
+    </mxCell>
+    <mxCell id="lbl3a" value="SOUS-MODULE 3a — Détection de phishing (NLP)  —  Équipe IA : I1" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=13;fontStyle=1;fontColor=#085041;" vertex="1" parent="1">
+      <mxGeometry x="60" y="76" width="680" height="24" as="geometry"/>
+    </mxCell>
+
+    <!-- Input 3a -->
+    <mxCell id="in3a" value="Texte brut entrant&#xa;(SMS / Email / URL)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#534AB7;strokeColor=#534AB7;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="270" y="115" width="200" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Prétraitement -->
+    <mxCell id="pre3a" value="Prétraitement NLP&#xa;(nettoyage, tokenisation, langue)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0F6E56;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="240" y="205" width="220" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Split modèle -->
+    <mxCell id="d3a" value="Modèle&#xa;sélectionné ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff8e6;strokeColor=#BA7517;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="300" width="180" height="70" as="geometry"/>
+    </mxCell>
+
+    <!-- Branche TF-IDF -->
+    <mxCell id="tfidf" value="TF-IDF Vectorizer&#xa;(max 10 000 features)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0F6E56;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="430" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="rf" value="Random Forest Classifier&#xa;(100 arbres)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0F6E56;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="510" width="180" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Branche BERT -->
+    <mxCell id="bert_tok" value="Tokenizer BERT&#xa;(bert-base-multilingual-cased)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0F6E56;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="440" y="430" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="bert_model" value="BERT Fine-tuné&#xa;(classification binaire fr/en)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0F6E56;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="440" y="510" width="220" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Softmax -->
+    <mxCell id="soft3a" value="Softmax → probabilité phishing [0,1]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f4ee;strokeColor=#0F6E56;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="620" width="300" height="44" as="geometry"/>
+    </mxCell>
+
+    <!-- Seuil -->
+    <mxCell id="thresh" value="Seuil &gt; 0.5 → phishing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f4ee;strokeColor=#0F6E56;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="200" y="700" width="300" height="44" as="geometry"/>
+    </mxCell>
+
+    <!-- ══ SOUS-MODULE 3b ══ -->
+    <mxCell id="bg3b" value="" style="rounded=1;fillColor=#fce4d6;strokeColor=#C0522A;opacity=40;" vertex="1" parent="1">
+      <mxGeometry x="800" y="70" width="660" height="700" as="geometry"/>
+    </mxCell>
+    <mxCell id="lbl3b" value="SOUS-MODULE 3b — Scoring vulnérabilités (ML)  —  Équipe IA : I2" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=13;fontStyle=1;fontColor=#7A2A10;" vertex="1" parent="1">
+      <mxGeometry x="800" y="76" width="660" height="24" as="geometry"/>
+    </mxCell>
+
+    <!-- Input 3b -->
+    <mxCell id="in3b" value="JSON vulnérabilités&#xa;(depuis Bloc 1)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#C0522A;strokeColor=#C0522A;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="115" width="200" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Feature engineering -->
+    <mxCell id="feat" value="Feature engineering&#xa;(CVSS + exposition + historique)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#C0522A;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="990" y="205" width="240" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Features list -->
+    <mxCell id="flist" value="Features : cvss_score, attack_vector,&#xa;privileges_required, exploit_public,&#xa;exposed_port, service_type,&#xa;patch_available, network_exposure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e6;strokeColor=#BA7517;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="970" y="295" width="300" height="90" as="geometry"/>
+    </mxCell>
+
+    <!-- Modèles ML -->
+    <mxCell id="rfb" value="Random Forest&#xa;(baseline)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#C0522A;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="850" y="440" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="xgb" value="XGBoost&#xa;(modèle principal)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#C0522A;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1060" y="440" width="180" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Score -->
+    <mxCell id="score3b" value="Score de priorité contextuel [0–10]&#xa;(remplace CVSS brut)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#C0522A;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="930" y="550" width="300" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Feature importance -->
+    <mxCell id="fi" value="Analyse feature importance&#xa;(interprétabilité du modèle)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#C0522A;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="930" y="640" width="300" height="44" as="geometry"/>
+    </mxCell>
+
+    <!-- Output 3b -->
+    <mxCell id="out3b" value="score_ml, severity → Bloc 4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C0522A;strokeColor=#C0522A;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="970" y="720" width="240" height="44" as="geometry"/>
+    </mxCell>
+
+    <!-- ARROWS 3a -->
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#534AB7;" edge="1" parent="1" source="in3a" target="pre3a"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0F6E56;" edge="1" parent="1" source="pre3a" target="d3a"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell value="Rapide" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0F6E56;" edge="1" parent="1" source="d3a" target="tfidf"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell value="Précis" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0F6E56;" edge="1" parent="1" source="d3a" target="bert_tok"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0F6E56;" edge="1" parent="1" source="tfidf" target="rf"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0F6E56;" edge="1" parent="1" source="bert_tok" target="bert_model"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0F6E56;" edge="1" parent="1" source="rf" target="soft3a"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0F6E56;" edge="1" parent="1" source="bert_model" target="soft3a"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#0F6E56;" edge="1" parent="1" source="soft3a" target="thresh"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <!-- ARROWS 3b -->
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C0522A;" edge="1" parent="1" source="in3b" target="feat"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C0522A;" edge="1" parent="1" source="feat" target="flist"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C0522A;" edge="1" parent="1" source="flist" target="rfb"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C0522A;" edge="1" parent="1" source="flist" target="xgb"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C0522A;" edge="1" parent="1" source="rfb" target="score3b"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C0522A;" edge="1" parent="1" source="xgb" target="score3b"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C0522A;" edge="1" parent="1" source="score3b" target="fi"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#C0522A;" edge="1" parent="1" source="fi" target="out3b"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
