@@ -115,6 +115,27 @@ class Alert(BaseModel):
     created_at: datetime = Field(default_factory=_now)
 
 
+class Research(BaseModel):
+    """Recherche/analyse enregistree par un usager (registre de recherches).
+
+    Quand un utilisateur analyse un message/URL qui n'existe pas encore dans la
+    base, on l'enregistre : il devient consultable dans les "recherches
+    recentes", exportable et partageable.
+    """
+
+    id: str
+    query: str = Field(..., description="Texte/URL recherche par l'usager")
+    channel: Channel = Channel.SMS
+    is_phishing: Optional[bool] = None
+    score: Optional[float] = Field(None, ge=0.0, le=1.0)
+    indicators: List[str] = Field(default_factory=list)
+    summary: str = Field("", description="Explication en langage naturel (assistant IA)")
+    model: str = Field("tfidf_rf", description="Modele ayant produit le verdict")
+    source: str = Field("user", description="user | api | import")
+    shared: bool = Field(False, description="Recherche partagee publiquement")
+    created_at: datetime = Field(default_factory=_now)
+
+
 __all__ = [
     "Severity",
     "Channel",
@@ -124,4 +145,5 @@ __all__ = [
     "PhishingPrediction",
     "VulnScore",
     "Alert",
+    "Research",
 ]

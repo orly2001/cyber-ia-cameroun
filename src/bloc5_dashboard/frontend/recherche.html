@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Console interactive — IA & Cybersécurité Cameroun</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0d1117;--card:#161b22;--bd:#30363d;--fg:#e6edf3;--mut:#8b949e;--acc:#1f6feb;--ok:#2ea043;--bad:#da3633;--warn:#d29922}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+  header{padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  h1{font-size:18px;margin:0;color:#58a6ff}
+  main{max-width:1180px;margin:0 auto;padding:18px;display:grid;gap:18px;grid-template-columns:1fr 1fr}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px}
+  .full{grid-column:1/-1}
+  h2{font-size:15px;margin:0 0 12px;color:#58a6ff}
+  label{display:block;font-size:12px;color:var(--mut);margin:8px 0 4px}
+  input,textarea,select{width:100%;background:#0d1117;border:1px solid var(--bd);color:var(--fg);border-radius:7px;padding:9px;font-size:14px;font-family:inherit}
+  textarea{min-height:70px;resize:vertical}
+  button{background:var(--acc);color:#fff;border:0;border-radius:7px;padding:9px 14px;font-size:14px;cursor:pointer;margin-top:10px}
+  button.ghost{background:#21262d;border:1px solid var(--bd)}
+  button:hover{filter:brightness(1.1)}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .row>*{flex:1}
+  .kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .kpi{flex:1;min-width:90px;background:#0d1117;border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
+  .kpi b{font-size:20px;display:block}
+  .verdict{padding:12px;border-radius:8px;margin-top:12px;font-weight:600}
+  .v-bad{background:rgba(218,54,51,.15);border:1px solid var(--bad);color:#ff7b72}
+  .v-ok{background:rgba(46,160,67,.15);border:1px solid var(--ok);color:#7ee787}
+  .tag{display:inline-block;background:#21262d;border:1px solid var(--bd);border-radius:20px;padding:2px 10px;font-size:12px;margin:3px 3px 0 0}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--bd)}
+  th{color:var(--mut);font-weight:600}
+  .sev-CRITICAL{color:#ff7b72;font-weight:700}.sev-HIGH{color:#ffa657}.sev-MEDIUM{color:#d29922}.sev-LOW{color:#58a6ff}.sev-INFO{color:#8b949e}
+  .muted{color:var(--mut);font-size:12px}
+  .banner{background:rgba(210,153,34,.15);border:1px solid var(--warn);color:#e3b341;padding:10px;border-radius:8px;margin:10px 18px}
+  .pill{font-size:11px;padding:1px 8px;border-radius:20px;background:#21262d;border:1px solid var(--bd);color:var(--mut)}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  canvas{max-height:200px}
+  a{color:#58a6ff}
+</style>
+</head>
+<body>
+<header>
+  <h1>🛡️ Console interactive — IA &amp; Cybersécurité Cameroun</h1>
+  <div class="row" style="max-width:420px">
+    <input id="apiBase" value="http://localhost:8000" title="URL de l'API"/>
+    <input id="apiKey" placeholder="Clé API (optionnel)" title="X-API-Key"/>
+  </div>
+</header>
+<div id="banner" class="banner" style="display:none"></div>
+<main>
+
+  <!-- ANALYSE + ASSISTANT -->
+  <section class="card">
+    <h2>🔎 Analyser un message</h2>
+    <label>Message (SMS, e-mail, URL)</label>
+    <textarea id="msg" placeholder="Ex : MTN MoMo, confirmez votre code PIN ici http://momo-verify.ml"></textarea>
+    <label>Canal</label>
+    <select id="chan"><option>SMS</option><option>EMAIL</option><option>URL</option></select>
+    <div class="row">
+      <button onclick="analyser()">Analyser</button>
+      <button class="ghost" onclick="enregistrer()">Enregistrer cette recherche</button>
+    </div>
+    <div id="res"></div>
+  </section>
+
+  <!-- SCAN CYBER -->
+  <section class="card">
+    <h2>🖥️ Scan de vulnérabilités (équipe Cyber)</h2>
+    <label>Cible (URL http(s):// ou IP/hôte)</label>
+    <input id="scanTarget" value="http://localhost:8080"/>
+    <label>Moteur</label>
+    <select id="scanEngine"><option value="demo">demo (sans infra)</option><option value="auto">auto</option><option value="zap">zap (web)</option><option value="nmap">nmap (réseau)</option></select>
+    <button onclick="scanner()">Lancer le scan</button>
+    <div id="scanRes"></div>
+  </section>
+
+  <!-- STATISTIQUES DES RECHERCHES -->
+  <section class="card full">
+    <h2>📊 Statistiques des recherches</h2>
+    <div class="kpis" id="kpis"></div>
+    <div class="charts">
+      <div><canvas id="chVerdict"></canvas></div>
+      <div><canvas id="chChannel"></canvas></div>
+      <div class="full" style="grid-column:1/-1"><canvas id="chDay"></canvas></div>
+    </div>
+  </section>
+
+  <!-- RECHERCHES RECENTES + FILTRES -->
+  <section class="card full">
+    <h2>🕘 Recherches récentes <span class="pill" id="rCount">0</span></h2>
+    <div class="row">
+      <input id="fText" placeholder="Filtrer par texte…" oninput="rendreListe()"/>
+      <select id="fChan" onchange="rendreListe()"><option value="">Tous canaux</option><option>SMS</option><option>EMAIL</option><option>URL</option></select>
+      <select id="fVerdict" onchange="rendreListe()"><option value="">Tous verdicts</option><option value="phishing">Phishing</option><option value="legit">Légitime</option></select>
+      <label style="flex:0 0 auto;display:flex;align-items:center;gap:6px;margin:0;color:var(--fg)"><input type="checkbox" id="fShared" style="width:auto" onchange="rendreListe()"/> Partagées</label>
+    </div>
+    <div class="row" style="max-width:480px">
+      <button class="ghost" onclick="exporter('csv')">Exporter CSV</button>
+      <button class="ghost" onclick="exporter('json')">Exporter JSON</button>
+      <button class="ghost" onclick="chargerRecherches()">Rafraîchir</button>
+    </div>
+    <div id="rlist"></div>
+  </section>
+
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const base=()=>$("#apiBase").value.replace(/\/$/,"");
+const key=()=>$("#apiKey").value.trim();
+function headers(json){const h={};if(json)h["Content-Type"]="application/json";const k=key();if(k)h["X-API-Key"]=k;return h;}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function banner(m){const b=$("#banner");if(!m){b.style.display="none";return;}b.style.display="block";b.textContent=m;}
+function errMsg(s){return ({400:"Requête invalide.",401:"Clé API requise ou invalide (renseignez le champ Clé API).",413:"Fichier trop volumineux.",429:"Trop de requêtes, patientez."})[s]||("Erreur "+s);}
+
+let lastAnalysis=null, ALL=[], charts={};
+
+async function analyser(){
+  const text=$("#msg").value.trim(); if(!text){banner("Saisissez un message.");return;}
+  banner("");
+  try{
+    const r=await fetch(base()+"/api/analyze",{method:"POST",headers:headers(true),body:JSON.stringify({text,channel:$("#chan").value})});
+    if(!r.ok){banner(errMsg(r.status));return;}
+    const d=await r.json(); lastAnalysis=d;
+    const cls=d.is_phishing?"v-bad":"v-ok";
+    const verdict=d.is_phishing?"⚠️ PHISHING probable":"✅ Légitime";
+    let html=`<div class="verdict ${cls}">${verdict} — score ${(d.score*100).toFixed(0)}% <span class="pill">${esc(d.model)}</span></div>`;
+    if(d.indicators&&d.indicators.length)html+=`<div style="margin-top:8px">${d.indicators.map(i=>`<span class="tag">${esc(i)}</span>`).join("")}</div>`;
+    $("#res").innerHTML=html;
+    const a=await fetch(base()+"/api/assistant/explain",{method:"POST",headers:headers(true),body:JSON.stringify({text,is_phishing:d.is_phishing,score:d.score,indicators:d.indicators})});
+    if(a.ok){const e=await a.json();
+      $("#res").innerHTML+=`<div class="card" style="margin-top:10px"><b>🤖 Assistant</b> <span class="pill">${esc(e.powered_by)}</span><p>${esc(e.explanation)}</p><ul>${(e.advice||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+    }
+  }catch(e){banner("API injoignable sur "+base()+". Démarrez l'API.");}
+}
+
+async function enregistrer(){
+  const query=$("#msg").value.trim(); if(!query){banner("Saisissez un message d'abord.");return;}
+  try{
+    const r=await fetch(base()+"/api/research",{method:"POST",headers:headers(true),body:JSON.stringify({query,channel:$("#chan").value})});
+    if(!r.ok){banner(errMsg(r.status));return;}
+    banner(""); chargerRecherches();
+  }catch(e){banner("API injoignable.");}
+}
+
+async function scanner(){
+  const target=$("#scanTarget").value.trim(); if(!target){banner("Saisissez une cible.");return;}
+  $("#scanRes").innerHTML='<p class="muted">Scan en cours…</p>';
+  try{
+    const r=await fetch(base()+"/api/scan",{method:"POST",headers:headers(true),body:JSON.stringify({target,engine:$("#scanEngine").value})});
+    if(!r.ok){$("#scanRes").innerHTML="";banner(errMsg(r.status));return;}
+    const d=await r.json();
+    let h=`<p class="muted">${d.count} vulnérabilité(s) — moteur ${esc(d.engine)}</p><table><tr><th>Nom</th><th>Sév.</th><th>CVSS</th><th>CVE</th><th>Hôte</th></tr>`;
+    (d.vulnerabilities||[]).forEach(v=>{h+=`<tr><td>${esc(v.name)}</td><td class="sev-${esc(v.severity)}">${esc(v.severity)}</td><td>${esc(v.cvss_score)}</td><td>${esc(v.cve_id||"-")}</td><td>${esc(v.host)}${v.port?":"+v.port:""}</td></tr>`;});
+    $("#scanRes").innerHTML=h+"</table>";
+  }catch(e){$("#scanRes").innerHTML="";banner("API injoignable.");}
+}
+
+async function chargerRecherches(){
+  try{
+    const r=await fetch(base()+"/api/research?limit=200"); if(!r.ok)return;
+    ALL=await r.json(); rendreListe(); chargerStats();
+  }catch(e){}
+}
+function rendreListe(){
+  const ft=($("#fText").value||"").toLowerCase(), fc=$("#fChan").value, fv=$("#fVerdict").value, fs=$("#fShared").checked;
+  let list=ALL.filter(x=>{
+    if(ft && !(x.query||"").toLowerCase().includes(ft))return false;
+    if(fc && x.channel!==fc)return false;
+    if(fv==="phishing" && x.is_phishing!==true)return false;
+    if(fv==="legit" && x.is_phishing!==false)return false;
+    if(fs && !x.shared)return false;
+    return true;
+  });
+  $("#rCount").textContent=list.length;
+  if(!list.length){$("#rlist").innerHTML='<p class="muted">Aucune recherche (ajustez les filtres ou analysez puis « Enregistrer »).</p>';return;}
+  let h='<table><tr><th>Requête</th><th>Canal</th><th>Verdict</th><th>Score</th><th>Date</th><th></th></tr>';
+  list.forEach(x=>{
+    const v=x.is_phishing===true?'<span class="sev-CRITICAL">phishing</span>':x.is_phishing===false?'<span class="sev-LOW">légitime</span>':'—';
+    h+=`<tr><td title="${esc(x.summary)}">${esc((x.query||"").slice(0,55))}</td><td>${esc(x.channel)}</td><td>${v}</td><td>${x.score!=null?(x.score*100).toFixed(0)+"%":"-"}</td><td class="muted">${esc((x.created_at||"").slice(0,16).replace("T"," "))}</td><td>${x.shared?'<span class="pill">partagé</span>':`<button class="ghost" style="margin:0;padding:3px 8px" onclick="partager('${esc(x.id)}')">Partager</button>`}</td></tr>`;
+  });
+  $("#rlist").innerHTML=h+"</table>";
+}
+
+async function chargerStats(){
+  try{
+    const r=await fetch(base()+"/api/research/stats"); if(!r.ok)return;
+    const s=await r.json();
+    $("#kpis").innerHTML=`
+      <div class="kpi"><span class="muted">Total</span><b>${s.total}</b></div>
+      <div class="kpi"><span class="muted">Phishing</span><b style="color:#ff7b72">${s.n_phishing}</b></div>
+      <div class="kpi"><span class="muted">Légitimes</span><b style="color:#7ee787">${s.n_legit}</b></div>
+      <div class="kpi"><span class="muted">Taux phishing</span><b>${(s.phishing_rate*100).toFixed(0)}%</b></div>
+      <div class="kpi"><span class="muted">Partagées</span><b>${s.shared}</b></div>`;
+    drawDonut("chVerdict","Verdicts",["Phishing","Légitime","Inconnu"],[s.by_verdict.phishing,s.by_verdict.legitime,s.by_verdict.inconnu],["#da3633","#2ea043","#8b949e"]);
+    const chL=Object.keys(s.by_channel), chV=chL.map(k=>s.by_channel[k]);
+    drawBar("chChannel","Par canal",chL,chV);
+    drawLine("chDay","Recherches/jour",s.by_day.map(d=>d.date.slice(5)),s.by_day.map(d=>d.count));
+  }catch(e){}
+}
+function destroy(id){if(charts[id]){charts[id].destroy();}}
+function drawDonut(id,label,labels,data,colors){destroy(id);charts[id]=new Chart($("#"+id),{type:"doughnut",data:{labels,datasets:[{data,backgroundColor:colors}]},options:{plugins:{legend:{labels:{color:"#e6edf3"}},title:{display:true,text:label,color:"#8b949e"}}}});}
+function drawBar(id,label,labels,data){destroy(id);charts[id]=new Chart($("#"+id),{type:"bar",data:{labels,datasets:[{data,backgroundColor:"#1f6feb"}]},options:{plugins:{legend:{display:false},title:{display:true,text:label,color:"#8b949e"}},scales:{x:{ticks:{color:"#8b949e"}},y:{ticks:{color:"#8b949e"},beginAtZero:true}}}});}
+function drawLine(id,label,labels,data){destroy(id);charts[id]=new Chart($("#"+id),{type:"line",data:{labels,datasets:[{data,borderColor:"#58a6ff",backgroundColor:"rgba(88,166,255,.2)",fill:true,tension:.3}]},options:{plugins:{legend:{display:false},title:{display:true,text:label,color:"#8b949e"}},scales:{x:{ticks:{color:"#8b949e"}},y:{ticks:{color:"#8b949e"},beginAtZero:true}}}});}
+
+async function partager(id){
+  try{const r=await fetch(base()+"/api/research/"+id+"/share",{method:"POST",headers:headers()});
+    if(!r.ok){banner(errMsg(r.status));return;}
+    const link=location.origin+location.pathname+"?research="+id;
+    banner("Recherche partagée. Lien : "+link); chargerRecherches();
+  }catch(e){banner("API injoignable.");}
+}
+function exporter(fmt){window.open(base()+"/api/research/export?fmt="+fmt,"_blank");}
+
+window.addEventListener("load",()=>{
+  chargerRecherches();
+  const id=new URLSearchParams(location.search).get("research");
+  if(id){fetch(base()+"/api/research/"+id).then(r=>r.ok?r.json():null).then(x=>{if(x)banner("Recherche partagée : "+x.query+" → "+(x.is_phishing?"phishing":"légitime"));});}
+});
+</script>
+</body>
+</html>

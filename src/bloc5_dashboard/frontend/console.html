@@ -10,6 +10,7 @@
     --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#283041;
     --txt:#e6edf3; --muted:#8b949e; --accent:#2f81f7; --accent2:#1f6feb;
     --ok:#3fb950; --warn:#d29922; --err:#f85149; --phish:#f85149; --legit:#3fb950;
+    --crit:#f85149; --high:#ff7b35; --med:#d29922; --low:#3fb950; --info:#58a6ff;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
@@ -28,6 +29,7 @@
   .banner{display:none;padding:10px 16px;border-radius:8px;margin-bottom:4px;font-size:13px}
   .banner.show{display:block}
   .banner.error{background:rgba(248,81,73,.12);border:1px solid var(--err);color:#ffb4af}
+  .banner.info{background:rgba(47,129,247,.12);border:1px solid var(--accent);color:#a9ccff}
   .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px}
   .card h2{margin:0 0 14px;font-size:15px;font-weight:600}
   .card h2 small{color:var(--muted);font-weight:400;font-size:12px}
@@ -41,6 +43,9 @@
   button{cursor:pointer;border:none;border-radius:7px;padding:10px 16px;font-weight:600;background:var(--accent2);color:#fff;transition:.15s}
   button:hover{background:var(--accent)}
   button:disabled{opacity:.5;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--border);color:var(--txt)}
+  button.ghost:hover{border-color:var(--accent);color:var(--accent)}
+  button.sm{padding:6px 11px;font-size:12px}
   .verdict{margin-top:14px;border-radius:9px;padding:14px;display:none}
   .verdict.show{display:block}
   .verdict.phish{background:rgba(248,81,73,.1);border:1px solid var(--phish)}
@@ -57,6 +62,16 @@
   .chip{background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:12px}
   .chip.risk{border-color:var(--warn);color:var(--warn)}
   .clean{margin-top:10px;font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;word-break:break-word}
+  .assist{margin-top:12px;border-top:1px dashed var(--border);padding-top:12px;display:none}
+  .assist.show{display:block}
+  .assist .ai-head{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+  .assist .pw{font-size:10px;font-weight:700;padding:1px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.03em}
+  .pw.gemini{background:rgba(47,129,247,.2);color:var(--accent)}
+  .pw.regles{background:rgba(139,148,158,.2);color:var(--muted)}
+  .assist .expl{margin-top:8px;font-size:13px;line-height:1.5}
+  .assist ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.5}
+  .assist ul li{margin-bottom:4px}
+  .actbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   .msg{font-size:13px;margin-top:10px;display:none}
   .msg.show{display:block}
   .msg.ok{color:var(--ok)} .msg.err{color:var(--err)} .msg.warn{color:var(--warn)}
@@ -66,6 +81,12 @@
   .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
   .pill.phish{background:rgba(248,81,73,.18);color:var(--phish)}
   .pill.legit{background:rgba(63,185,80,.18);color:var(--legit)}
+  .pill.shared{background:rgba(63,185,80,.18);color:var(--legit)}
+  .sev-CRITICAL{background:rgba(248,81,73,.18);color:var(--crit)}
+  .sev-HIGH{background:rgba(255,123,53,.18);color:var(--high)}
+  .sev-MEDIUM{background:rgba(210,153,34,.18);color:var(--med)}
+  .sev-LOW{background:rgba(63,185,80,.18);color:var(--low)}
+  .sev-INFO{background:rgba(88,166,255,.18);color:var(--info)}
   .summary{display:flex;gap:18px;flex-wrap:wrap;margin-top:8px}
   .summary div{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:90px;text-align:center}
   .summary .n{font-size:22px;font-weight:700} .summary .l{font-size:11px;color:var(--muted)}
@@ -81,13 +102,24 @@
   .ev .sc{color:var(--muted);font-variant-numeric:tabular-nums}
   .muted{color:var(--muted)}
   .toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .rlist{max-height:340px;overflow-y:auto;margin-top:10px}
+  .ritem{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--panel2)}
+  .ritem .rq{font-size:13px;word-break:break-word}
+  .ritem .rmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:7px}
+  .ritem .ract{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .copyrow{display:flex;gap:8px;margin-top:8px}
+  .copyrow input{font-size:12px}
   footer{text-align:center;color:var(--muted);font-size:12px;padding:24px}
   .keyrow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transform:translateY(10px);transition:.25s;z-index:50}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.ok{border-left-color:var(--ok)} .toast.err{border-left-color:var(--err)}
+  .demo-tag{font-size:10px;background:var(--warn);color:#000;padding:1px 7px;border-radius:4px;font-weight:700}
 </style>
 </head>
 <body>
 <header>
-  <h1>Console d'analyse <span>· Détection de phishing</span></h1>
+  <h1>Console d'analyse <span>· Détection de phishing &amp; scan</span></h1>
   <div class="topbar-right">
     <span class="row"><span id="apiDot" class="status-dot"></span><span id="apiState" class="muted">Connexion…</span></span>
     <nav class="nav"><a href="index.html">Dashboard</a><a href="console.html">Console d'analyse</a></nav>
@@ -100,13 +132,13 @@
   <div class="card full">
     <div class="keyrow">
       <div class="field" style="flex:1;margin:0">
-        <label>Clé API (optionnelle — requise pour l'upload si configurée côté serveur)</label>
+        <label>Clé API (optionnelle — requise pour upload / scan / enregistrement / partage si configurée côté serveur)</label>
         <input id="apiKey" type="password" placeholder="X-API-Key">
       </div>
     </div>
   </div>
 
-  <!-- ===== Analyse unitaire (POST /api/analyze) ===== -->
+  <!-- ===== Analyse unitaire (POST /api/analyze + /api/assistant/explain) ===== -->
   <div class="card">
     <h2>Analyser un message <small>POST /api/analyze</small></h2>
     <div class="field">
@@ -132,6 +164,18 @@
       </div>
       <div id="vIndicators" class="chips"></div>
       <div id="vClean" class="clean" style="display:none"></div>
+
+      <!-- Explication assistant IA (POST /api/assistant/explain) -->
+      <div id="assist" class="assist">
+        <div class="ai-head">🤖 Assistant — explication en langage naturel
+          <span id="aiPower" class="pw regles">repli</span></div>
+        <div id="aiExpl" class="expl muted">Demande d'explication en cours…</div>
+        <ul id="aiAdvice"></ul>
+      </div>
+
+      <div class="actbar">
+        <button id="btnSaveResearch" class="ghost sm">💾 Enregistrer cette recherche</button>
+      </div>
     </div>
   </div>
 
@@ -159,6 +203,56 @@
     </div>
   </div>
 
+  <!-- ===== Panneau SCAN (équipe Cyber) — POST /api/scan ===== -->
+  <div class="card full">
+    <h2>Scan de vulnérabilités <small>POST /api/scan · équipe Cyber (bloc 1)</small></h2>
+    <div class="row">
+      <div class="field" style="flex:2">
+        <label>Cible (IP / hôte / URL)</label>
+        <input id="scanTarget" placeholder="ex. 10.10.0.21  ou  https://exemple.cm">
+      </div>
+      <div class="field">
+        <label>Moteur</label>
+        <select id="scanEngine">
+          <option value="auto">auto</option>
+          <option value="nmap">nmap</option>
+          <option value="zap">zap</option>
+          <option value="demo">demo</option>
+        </select>
+      </div>
+      <button id="btnScan">Lancer le scan</button>
+      <button id="btnScanDemo" class="ghost">▶ Démo (sans infra)</button>
+    </div>
+    <div id="scanMsg" class="msg"></div>
+    <div id="scanResult" style="display:none">
+      <div class="summary">
+        <div><div id="scCount" class="n">0</div><div class="l">vulnérabilités</div></div>
+        <div><div id="scEngine" class="n" style="font-size:16px">—</div><div class="l">moteur</div></div>
+        <div><div id="scDur" class="n" style="font-size:16px">—</div><div class="l">durée</div></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Nom / Type</th><th>Sévérité</th><th>CVSS</th><th>CVE</th><th>Hôte:Port</th></tr></thead>
+          <tbody id="scanBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Recherches récentes (GET /api/research, export, share) ===== -->
+  <div class="card full">
+    <div class="live-head">
+      <h2 style="margin:0">Recherches récentes <small>GET /api/research</small></h2>
+      <div class="row" style="align-items:center">
+        <button id="btnReloadResearch" class="ghost sm">↻ Rafraîchir</button>
+        <button id="btnExportCsv" class="ghost sm">⬇ Exporter CSV</button>
+        <button id="btnExportJson" class="ghost sm">⬇ Exporter JSON</button>
+      </div>
+    </div>
+    <div id="researchMsg" class="msg"></div>
+    <div id="researchList" class="rlist"><div class="muted" style="padding:14px 0">Aucune recherche enregistrée pour l'instant.</div></div>
+  </div>
+
   <!-- ===== Flux temps réel (GET /api/live/recent + /api/live/stats) ===== -->
   <div class="card full">
     <div class="live-head">
@@ -176,15 +270,18 @@
   </div>
 </main>
 
-<footer>Bloc 5 — Console d'analyse temps réel · Détection de phishing (bloc 3)</footer>
+<footer>Bloc 5 — Console interactive · Phishing (bloc 3) · Scan (bloc 1) · Assistant IA</footer>
+<div id="toast" class="toast"></div>
 
 <script>
 /* ===================== CONFIGURATION ===================== */
-const API_BASE = "http://localhost:8000";   // <-- adapter si l'API tourne ailleurs
+const API_BASE = "http://localhost:8000";   /* <-- adapter si l'API tourne ailleurs */
 /* ======================================================== */
 
 const $=(id)=>document.getElementById(id);
 let liveChart=null, liveTimer=null;
+let lastVerdict=null;   /* dernier verdict (pour assistant + enregistrement) */
+let lastQuery="", lastChannel="SMS";
 
 function getApiKey(){ return ($("apiKey").value||"").trim(); }
 function authHeaders(extra){
@@ -194,15 +291,23 @@ function authHeaders(extra){
 }
 function showMsg(el,text,kind){ el.textContent=text; el.className="msg show "+(kind||""); }
 function hideMsg(el){ el.className="msg"; }
-function showBanner(t){ const b=$("banner"); b.textContent=t; b.className="banner full show error"; }
+function showBanner(t,kind){ const b=$("banner"); b.textContent=t; b.className="banner full show "+(kind||"error"); }
 function hideBanner(){ $("banner").className="banner full"; }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function toast(msg,kind){ const t=$("toast"); t.textContent=msg; t.className="toast show "+(kind||""); setTimeout(()=>{ t.className="toast "+(kind||""); },3600); }
+
+function fmtDate(iso){
+  if(!iso) return "—";
+  try{ return new Date(iso).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}); }
+  catch(e){ return iso; }
+}
 
 async function describeError(resp){
   let detail=""; try{ const j=await resp.json(); detail=j.detail||j.message||""; }catch(e){}
   switch(resp.status){
     case 400: return "Requête invalide. "+detail;
     case 401: return "Clé API invalide ou manquante : renseignez le champ « Clé API ».";
+    case 404: return "Ressource introuvable. "+detail;
     case 413: return "Fichier trop volumineux (limite 2 Mo).";
     case 429: return "Trop de requêtes (limite de débit). Patientez quelques secondes avant de réessayer.";
     default: return "Erreur "+resp.status+(detail?" : "+detail:".");
@@ -214,11 +319,17 @@ function setApiState(up){
   $("apiState").textContent=up?"API connectée":"API injoignable";
 }
 
+function scoreColor(score){
+  if(score>=0.66) return "#f85149";
+  if(score>=0.33) return "#d29922";
+  return "#3fb950";
+}
+
 /* -------- Analyse unitaire : POST /api/analyze -------- */
 async function analyze(){
   const text=$("msgText").value.trim();
   const channel=$("msgChannel").value;
-  hideMsg($("analyzeMsg")); $("verdict").className="verdict";
+  hideMsg($("analyzeMsg")); $("verdict").className="verdict"; $("assist").className="assist";
   if(!text){ showMsg($("analyzeMsg"),"Saisissez un message à analyser.","warn"); return; }
   const btn=$("btnAnalyze"); btn.disabled=true; const old=btn.textContent; btn.textContent="Analyse…";
   try{
@@ -227,15 +338,12 @@ async function analyze(){
       body:JSON.stringify({text,channel})
     });
     if(!r.ok) throw new Error(await describeError(r));
-    renderVerdict(await r.json());
+    const v=await r.json();
+    lastVerdict=v; lastQuery=text; lastChannel=channel;
+    renderVerdict(v);
+    explainVerdict(text,v);   /* enchaîne l'assistant IA */
   }catch(e){ showMsg($("analyzeMsg"),e.message,"err"); }
   finally{ btn.disabled=false; btn.textContent=old; }
-}
-
-function scoreColor(score){
-  if(score>=0.66) return "#f85149";
-  if(score>=0.33) return "#d29922";
-  return "#3fb950";
 }
 
 function renderVerdict(v){
@@ -253,6 +361,194 @@ function renderVerdict(v){
   const clean=$("vClean");
   if(v.clean_text){ clean.style.display="block"; clean.innerHTML="<b>Texte nettoyé :</b> "+esc(v.clean_text); }
   else clean.style.display="none";
+}
+
+/* -------- Assistant IA : POST /api/assistant/explain -------- */
+async function explainVerdict(text,v){
+  const box=$("assist"); box.className="assist show";
+  $("aiExpl").textContent="Demande d'explication en cours…";
+  $("aiAdvice").innerHTML=""; $("aiPower").className="pw regles"; $("aiPower").textContent="…";
+  try{
+    const r=await fetch(API_BASE+"/api/assistant/explain",{
+      method:"POST", headers:authHeaders({"Content-Type":"application/json"}),
+      body:JSON.stringify({
+        text:text,
+        is_phishing:!!v.is_phishing,
+        score:v.score!=null?v.score:null,
+        indicators:v.indicators||[]
+      })
+    });
+    if(!r.ok) throw new Error(await describeError(r));
+    const a=await r.json();
+    $("aiExpl").classList.remove("muted");
+    $("aiExpl").textContent=a.explanation||"—";
+    $("aiAdvice").innerHTML=(a.advice||[]).map(x=>"<li>"+esc(x)+"</li>").join("");
+    const pw=(a.powered_by||"regles");
+    $("aiPower").className="pw "+(pw==="gemini"?"gemini":"regles");
+    $("aiPower").textContent=pw==="gemini"?"Gemini":"règles";
+  }catch(e){
+    $("aiExpl").textContent="Explication indisponible : "+e.message;
+  }
+}
+
+/* -------- Enregistrer une recherche : POST /api/research -------- */
+async function saveResearch(){
+  if(!lastQuery){ toast("Analysez d'abord un message.","err"); return; }
+  const btn=$("btnSaveResearch"); btn.disabled=true; const old=btn.textContent; btn.textContent="Enregistrement…";
+  try{
+    const r=await fetch(API_BASE+"/api/research",{
+      method:"POST", headers:authHeaders({"Content-Type":"application/json"}),
+      body:JSON.stringify({query:lastQuery,channel:lastChannel})
+    });
+    if(!r.ok) throw new Error(await describeError(r));
+    await r.json();
+    toast("Recherche enregistrée.","ok");
+    loadResearch();
+  }catch(e){ toast(e.message,"err"); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+/* -------- Recherches récentes : GET /api/research -------- */
+async function loadResearch(){
+  hideMsg($("researchMsg"));
+  const list=$("researchList");
+  try{
+    const r=await fetch(API_BASE+"/api/research?limit=50",{headers:authHeaders()});
+    if(!r.ok) throw new Error(await describeError(r));
+    const items=await r.json();
+    if(!items.length){ list.innerHTML='<div class="muted" style="padding:14px 0">Aucune recherche enregistrée pour l\'instant.</div>'; return; }
+    list.innerHTML=items.map(renderResearchItem).join("");
+  }catch(e){
+    list.innerHTML='<div class="muted" style="padding:14px 0">Recherches indisponibles : '+esc(e.message)+'</div>';
+  }
+}
+
+function renderResearchItem(it){
+  const phish=it.is_phishing===true, legit=it.is_phishing===false;
+  const verdict=phish?'<span class="pill phish">Phishing</span>':(legit?'<span class="pill legit">Légitime</span>':'<span class="pill">Indéterminé</span>');
+  const pct=it.score!=null?Math.round(it.score*100)+"%":"—";
+  const sharedBadge=it.shared?'<span class="pill shared">✓ Partagée</span>':"";
+  const shareBtn=it.shared
+    ? '<button class="ghost sm" disabled>Partagée</button>'
+    : '<button class="ghost sm" onclick="shareResearch(\''+esc(it.id)+'\')">🔗 Partager</button>';
+  const linkBtn='<button class="ghost sm" onclick="copyShareLink(\''+esc(it.id)+'\')">📋 Lien</button>';
+  return '<div class="ritem" id="ri-'+esc(it.id)+'">'
+    +'<div class="rq">'+esc(it.query)+'</div>'
+    +'<div class="rmeta">'+verdict
+      +'<span class="muted">score '+pct+'</span>'
+      +'<span class="muted">'+esc(it.channel||"")+'</span>'
+      +'<span class="muted">'+fmtDate(it.created_at)+'</span>'
+      +sharedBadge
+    +'</div>'
+    +'<div class="ract">'+shareBtn+linkBtn+'</div>'
+  +'</div>';
+}
+
+/* -------- Partage d'une recherche : POST /api/research/{id}/share -------- */
+async function shareResearch(id){
+  try{
+    const r=await fetch(API_BASE+"/api/research/"+encodeURIComponent(id)+"/share",{
+      method:"POST", headers:authHeaders({"Content-Type":"application/json"})
+    });
+    if(!r.ok) throw new Error(await describeError(r));
+    await r.json();
+    toast("Recherche partagée.","ok");
+    loadResearch();
+  }catch(e){ toast(e.message,"err"); }
+}
+
+/* Lien copiable ?research=<id> qui ouvre le détail au chargement. */
+function shareUrl(id){
+  const base=location.href.split("?")[0].split("#")[0];
+  return base+"?research="+encodeURIComponent(id);
+}
+function copyShareLink(id){
+  const url=shareUrl(id);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>toast("Lien copié : "+url,"ok"),()=>promptCopy(url));
+  }else{ promptCopy(url); }
+}
+function promptCopy(url){ window.prompt("Copiez ce lien de partage :",url); }
+
+/* -------- Export : GET /api/research/export?format=csv|json -------- */
+function exportResearch(fmt){
+  /* Le param serveur EST « format » (json|csv). Déclenche un téléchargement. */
+  const url=API_BASE+"/api/research/export?format="+encodeURIComponent(fmt);
+  const a=document.createElement("a");
+  a.href=url; a.download="recherches."+fmt; a.style.display="none";
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("Export "+fmt.toUpperCase()+" lancé.","ok");
+}
+
+/* Au chargement : ?research=<id> -> ouvrir le détail (GET /api/research/{id}). */
+async function openSharedResearch(){
+  const params=new URLSearchParams(location.search);
+  const id=params.get("research");
+  if(!id) return;
+  try{
+    const r=await fetch(API_BASE+"/api/research/"+encodeURIComponent(id),{headers:authHeaders()});
+    if(!r.ok) throw new Error(await describeError(r));
+    const it=await r.json();
+    const phish=it.is_phishing===true;
+    showBanner("Recherche partagée « "+ (it.query||"").slice(0,80) +" » — "
+      +(phish?"PHISHING":"légitime")+" · score "+(it.score!=null?Math.round(it.score*100)+"%":"—"),"info");
+  }catch(e){
+    showBanner("Recherche partagée introuvable : "+e.message,"error");
+  }
+}
+
+/* -------- SCAN : POST /api/scan -------- */
+async function runScan(forceDemo){
+  const target=$("scanTarget").value.trim();
+  let engine=$("scanEngine").value;
+  if(forceDemo) engine="demo";
+  hideMsg($("scanMsg")); $("scanResult").style.display="none";
+  if(engine!=="demo" && !target){ showMsg($("scanMsg"),"Indiquez une cible (ou utilisez le mode Démo).","warn"); return; }
+  const realTarget=target||"demo-host";
+  const btns=[$("btnScan"),$("btnScanDemo")]; btns.forEach(b=>b.disabled=true);
+  showMsg($("scanMsg"),"Scan en cours ("+engine+")…","");
+  try{
+    const r=await fetch(API_BASE+"/api/scan",{
+      method:"POST", headers:authHeaders({"Content-Type":"application/json"}),
+      body:JSON.stringify({target:realTarget,engine})
+    });
+    if(!r.ok) throw new Error(await describeError(r));
+    renderScan(await r.json());
+  }catch(e){ showMsg($("scanMsg"),e.message,"err"); }
+  finally{ btns.forEach(b=>b.disabled=false); }
+}
+
+function sevFromCvss(c){
+  if(c==null) return "INFO";
+  if(c>=9) return "CRITICAL"; if(c>=7) return "HIGH"; if(c>=4) return "MEDIUM"; if(c>0) return "LOW"; return "INFO";
+}
+
+function renderScan(d){
+  $("scCount").textContent=d.count!=null?d.count:(d.vulnerabilities||[]).length;
+  $("scEngine").textContent=d.engine||"—";
+  $("scDur").textContent=(d.duration_sec!=null?d.duration_sec+" s":"—");
+  const body=$("scanBody");
+  const vulns=d.vulnerabilities||[];
+  if(!vulns.length){ body.innerHTML='<tr><td colspan="5" class="muted">Aucune vulnérabilité trouvée.</td></tr>'; }
+  else{
+    body.innerHTML=vulns.map(v=>{
+      const sev=(v.severity||sevFromCvss(v.cvss_score)).toUpperCase();
+      const cvss=v.cvss_score!=null?v.cvss_score:"—";
+      const cve=v.cve_id?esc(v.cve_id):"—";
+      const hostport=esc(v.host||"")+(v.port?":"+esc(v.port):"");
+      const nm=esc(v.name||v.service||v.id||"—");
+      const desc=v.description?'<div class="muted" style="font-size:11px;margin-top:3px">'+esc(v.description.slice(0,160))+'</div>':"";
+      return '<tr>'
+        +'<td>'+nm+desc+'</td>'
+        +'<td><span class="pill sev-'+sev+'">'+sev+'</span></td>'
+        +'<td>'+cvss+'</td>'
+        +'<td>'+cve+'</td>'
+        +'<td class="muted">'+hostport+'</td>'
+      +'</tr>';
+    }).join("");
+  }
+  showMsg($("scanMsg"),"Scan terminé ("+(d.engine||"?")+") : "+($("scCount").textContent)+" vulnérabilité(s).","ok");
+  $("scanResult").style.display="block";
 }
 
 /* -------- Upload de fichier : POST /api/upload -------- */
@@ -297,18 +593,18 @@ async function pollLive(){
       fetch(API_BASE+"/api/live/recent?limit=20").then(r=>{ if(!r.ok) throw new Error("recent "+r.status); return r.json(); }),
       fetch(API_BASE+"/api/live/stats").then(r=>{ if(!r.ok) throw new Error("stats "+r.status); return r.json(); })
     ]);
-    setApiState(true); hideBanner();
+    setApiState(true); if($("banner").classList.contains("error")) hideBanner();
     renderLiveStats(stats); renderFeed(recent);
     $("lUpdate").textContent="MAJ "+new Date().toLocaleTimeString("fr-FR");
   }catch(e){
     setApiState(false);
-    showBanner("API injoignable sur "+API_BASE+". Démarrez l'API (uvicorn) — le flux temps réel et l'analyse sont indisponibles.");
+    showBanner("API injoignable sur "+API_BASE+". Démarrez l'API (uvicorn) — flux temps réel, analyse, scan et recherches indisponibles.","error");
   }
 }
 
 function renderLiveStats(s){
-  $("lTotal").textContent=s.total??0;
-  $("lPhish").textContent=s.n_phishing??0;
+  $("lTotal").textContent=s.total!=null?s.total:0;
+  $("lPhish").textContent=s.n_phishing!=null?s.n_phishing:0;
   $("lRate").textContent=Math.round((s.phishing_rate||0)*100)+"%";
   drawLiveChart(s.recent_scores||[]);
 }
@@ -345,12 +641,21 @@ function renderFeed(events){
 function startLive(){ if(liveTimer) return; pollLive(); liveTimer=setInterval(pollLive,3000); }
 function stopLive(){ if(liveTimer){ clearInterval(liveTimer); liveTimer=null; } }
 
+/* -------- Câblage des actions -------- */
 $("btnAnalyze").onclick=analyze;
+$("btnSaveResearch").onclick=saveResearch;
 $("btnUpload").onclick=upload;
+$("btnScan").onclick=()=>runScan(false);
+$("btnScanDemo").onclick=()=>runScan(true);
+$("btnReloadResearch").onclick=loadResearch;
+$("btnExportCsv").onclick=()=>exportResearch("csv");
+$("btnExportJson").onclick=()=>exportResearch("json");
 $("liveToggle").addEventListener("change",e=>{ if(e.target.checked) startLive(); else stopLive(); });
 
-/* Démarrage : ping + flux temps réel. */
-fetch(API_BASE+"/health").then(r=>setApiState(r.ok)).catch(()=>setApiState(false)).finally(startLive);
+/* Démarrage : ping + flux + recherches + lien de partage éventuel. */
+fetch(API_BASE+"/health").then(r=>setApiState(r.ok)).catch(()=>setApiState(false)).finally(()=>{
+  startLive(); loadResearch(); openSharedResearch();
+});
 </script>
 </body>
 </html>

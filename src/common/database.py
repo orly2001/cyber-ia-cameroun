@@ -45,6 +45,24 @@ class AlertORM(Base):
 _db_url = settings.effective_database_url
 # SQLite : autoriser l'usage multi-thread (FastAPI) et lisser la concurrence.
 _connect_args = {"check_same_thread": False} if _db_url.startswith("sqlite") else {}
+class ResearchORM(Base):
+    __tablename__ = "research"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    query: Mapped[str] = mapped_column(String, nullable=False)
+    channel: Mapped[str] = mapped_column(String, default="SMS")
+    is_phishing: Mapped[bool | None] = mapped_column(default=None, nullable=True)
+    score: Mapped[float | None] = mapped_column(Float, default=None, nullable=True)
+    indicators: Mapped[list] = mapped_column(JSON, default=list)
+    summary: Mapped[str] = mapped_column(String, default="")
+    model: Mapped[str] = mapped_column(String, default="tfidf_rf")
+    source: Mapped[str] = mapped_column(String, default="user")
+    shared: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+
 engine = create_engine(_db_url, future=True, connect_args=_connect_args)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 

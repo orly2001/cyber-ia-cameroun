@@ -1,7 +1,13 @@
 # ---------------------------------------------------------------------------
-# Orchestration locale : PostgreSQL + API SOC (bloc 5).
-# Noms d'utilisateur / base alignés avec src/common/config.py
-#   database_url = postgresql+psycopg2://soc:soc@.../soc_cm
+# Stack de deploiement COMPLETE — IA & Cybersecurite Cameroun
+#   db   : PostgreSQL 16 (persistant)
+#   api  : API FastAPI (bloc 5) + moteur IA (entrainement au 1er demarrage)
+#   web  : frontend statique (dashboard SOC + console temps reel) via nginx
+#
+# Variables (toutes optionnelles, valeurs par defaut fournies) — definir dans
+# un fichier .env a la racine pour la production :
+#   POSTGRES_PASSWORD, API_KEY, API_PORT, WEB_PORT, PHISHING_THRESHOLD
+# Identifiants/base alignes avec src/common/config.py (soc/soc/soc_cm).
 # ---------------------------------------------------------------------------
 services:
   db:
@@ -10,7 +16,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: soc
-      POSTGRES_PASSWORD: soc
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-soc}
       POSTGRES_DB: soc_cm
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -27,24 +33,49 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: cyber-ia-cameroun-api:latest
     container_name: soc-api
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
-      # Pointe vers le service `db` du réseau Compose (et non localhost).
-      DATABASE_URL: postgresql+psycopg2://soc:soc@db:5432/soc_cm
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+psycopg2://soc:${POSTGRES_PASSWORD:-soc}@db:5432/soc_cm
       USE_SQLITE_FALLBACK: "false"
       API_HOST: 0.0.0.0
       API_PORT: "8000"
+      # Vide => auth desactivee (dev). En prod (ENVIRONMENT=production) une cle
+      # est EXIGEE par enforce_production_security() : definir API_KEY dans .env.
+      API_KEY: ${API_KEY:-}
+      PHISHING_THRESHOLD: ${PHISHING_THRESHOLD:-0.5}
+      # Origines autorisees (le frontend tourne sur WEB_PORT).
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # Persiste le modele entraine entre les redemarrages.
+      - models:/app/models
+    networks:
+      - soc-net
+
+  web:
+    image: nginx:1.27-alpine
+    container_name: soc-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      - ./src/bloc5_dashboard/frontend:/usr/share/nginx/html:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${WEB_PORT:-5173}:80"
     networks:
       - soc-net
 
 volumes:
   pgdata:
+  models:
 
 networks:
   soc-net:

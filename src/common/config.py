@@ -61,6 +61,20 @@ class Settings(BaseSettings):
     # Vide => authentification desactivee (mode dev permissif, voir security.py).
     api_key: str = ""
 
+    # --- Assistant IA (Google Gemini) ---
+    # Cle lue depuis l'environnement (.env, gitignore). NE JAMAIS committer.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-1.5-flash"
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+
+    # --- Bloc 1 : scan reseau (Nmap) ---
+    # Liste blanche de cibles autorisees au scan (securite : on n'autorise que
+    # ces hotes/plages en dehors du mode demo). scanme.nmap.org est prevu par
+    # Nmap pour les tests publics.
+    nmap_path: str = "nmap"
+    nmap_allowed_targets: str = "127.0.0.1,localhost,scanme.nmap.org"
+    nmap_default_args: str = "-T4 -F -sV"
+
     model_config = SettingsConfigDict(
         env_file=str(ROOT_DIR / ".env"),
         env_file_encoding="utf-8",

@@ -1,0 +1,63 @@
+# ---------------------------------------------------------------------------
+# Stack de DÉMO LIVE pour le Bloc 1 — Scan OWASP ZAP RÉEL
+#
+#   dvwa : Damn Vulnerable Web Application (cible d'entraînement INTENTIONNELLEMENT
+#          vulnérable) exposée sur http://localhost:8080
+#   zap  : démon OWASP ZAP en mode daemon, API REST + proxy sur le port 8090
+#
+# ⚠️ ÉTHIQUE / LÉGAL
+#   N'utilisez cette stack que sur VOTRE machine, en environnement isolé. DVWA
+#   est délibérément vulnérable : ne l'exposez JAMAIS sur Internet. Ne pointez le
+#   scan ZAP que vers des cibles dont vous avez l'autorisation (ici, DVWA local).
+#
+# Lancement (depuis la racine du projet) :
+#   1. Démarrer la stack de démo :
+#        docker compose -f docker-compose.scan.yml up -d
+#   2. Attendre que DVWA réponde (http://localhost:8080) puis initialiser sa base
+#      via le bouton « Create / Reset Database » (login admin/password).
+#   3. Lancer un scan réel via le client (le démon ZAP est le proxy/API) :
+#        ZAP_API_URL=http://localhost:8090 ZAP_API_KEY=changeme \
+#          python -m src.bloc1_scan.scanner --target http://localhost:8080 \
+#          --output scan_dvwa.json
+#      (ou via l'endpoint POST /api/scan du dashboard avec demo=false)
+#   4. Arrêter / nettoyer :
+#        docker compose -f docker-compose.scan.yml down
+#
+# Variables (optionnelles, valeurs par défaut fournies) :
+#   ZAP_API_KEY  : clé protégeant l'API ZAP (défaut : changeme)
+#   DVWA_PORT    : port hôte de DVWA (défaut : 8080)
+#   ZAP_PORT     : port hôte de l'API/proxy ZAP (défaut : 8090)
+# ---------------------------------------------------------------------------
+services:
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: scan-dvwa
+    restart: unless-stopped
+    ports:
+      - "${DVWA_PORT:-8080}:80"
+    networks:
+      - scan-net
+
+  zap:
+    # Image officielle ZAP. Repli historique : owasp/zap2docker-stable
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: scan-zap
+    restart: unless-stopped
+    # Démarre ZAP en mode daemon, écoutant sur toutes les interfaces du conteneur,
+    # avec une clé d'API configurable et l'accès autorisé depuis l'hôte.
+    command: >
+      zap.sh -daemon
+      -host 0.0.0.0 -port 8090
+      -config api.key=${ZAP_API_KEY:-changeme}
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+    ports:
+      - "${ZAP_PORT:-8090}:8090"
+    depends_on:
+      - dvwa
+    networks:
+      - scan-net
+
+networks:
+  scan-net:
+    driver: bridge

@@ -93,3 +93,21 @@ gérée par un message clair.
 - Design SOC sombre, responsive (cartes et grilles s'adaptent au mobile).
 </content>
 </invoke>
+
+## recherche.html — Console interactive (démo live)
+
+Page autonome regroupant tout ce qui est interactif pour une démonstration :
+- **Analyse + Assistant IA** : analyse un message (`/api/analyze`) et affiche une
+  explication en langage naturel + conseils (`/api/assistant/explain`,
+  « powered_by » = gemini si la clé est configurée, sinon règles).
+- **Enregistrement à la volée** : bouton « Enregistrer cette recherche »
+  (`POST /api/research`) ; une recherche inconnue est ajoutée au registre.
+- **Recherches récentes** : liste (`GET /api/research`), **partage**
+  (`POST /api/research/{id}/share` → lien `?research=<id>`), **export CSV/JSON**
+  (`GET /api/research/export?fmt=...`).
+- **Scan (équipe Cyber)** : cible + moteur (demo/auto/zap/nmap) → `POST /api/scan`
+  → tableau des vulnérabilités (sévérité, CVSS, CVE).
+- Champ **Clé API** (en-tête `X-API-Key`) et gestion des erreurs 400/401/413/429.
+
+Ouvrir : `http://localhost:5173/recherche.html` (servir le dossier via nginx/Docker
+ou `python -m http.server 5173`). Régler `API_BASE` en haut si l'API n'est pas sur :8000.

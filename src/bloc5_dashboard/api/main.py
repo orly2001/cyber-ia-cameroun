@@ -25,6 +25,9 @@ from .security import require_api_key, enforce_production_security
 from .ratelimit import rate_limit_middleware
 from .inference import router as inference_router
 from .realtime import router as realtime_router
+from .research import router as research_router
+from .assistant import router as assistant_router
+from .scan import router as scan_router
 
 
 # --------------------------------------------------------------------------- #
@@ -96,6 +99,9 @@ async def _security_headers(request: Request, call_next):
 # Routers métier : inférence (analyse/upload/modèle) et temps réel (logs live).
 app.include_router(inference_router)
 app.include_router(realtime_router)
+app.include_router(research_router)
+app.include_router(assistant_router)
+app.include_router(scan_router)
 
 
 # --------------------------------------------------------------------------- #
